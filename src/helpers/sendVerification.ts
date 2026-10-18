@@ -10,7 +10,8 @@ interface ApiResponse {
 export async function sendVerificationEmail(
   email: string,
   username: string,
-  verifyCode: string
+  verifyCode: string,
+  subject = "Habit Tracker - Email Verification Code"
 ): Promise<ApiResponse> {
   try {
     const { data, error } = await resend.emails.send({

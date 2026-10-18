@@ -1,9 +1,8 @@
+
 import User from "@/models/user.models";
 import { ConnectionTODB } from "@/config/Db";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { randomInt, createHash } from "crypto";
-import { sendVerificationEmail } from "@/helpers/sendVerification";
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,33 +10,41 @@ export async function POST(request: NextRequest) {
 
     const { username, email, password } = await request.json();
 
+    // 1. Validate required fields
     if (!username || !email || !password) {
       return NextResponse.json(
-        { success: false, message: "All fields are required." },
+        {
+          success: false,
+          message: "All fields are required.",
+        },
         { status: 400 }
       );
     }
 
-    const normalizedEmail = String(email).trim().toLowerCase();
-
-    const existingUser = await User.findOne({
-      email: normalizedEmail,
-    });
-
-    if (existingUser) {
+    // 2. Validate input types
+    if (
+      typeof username !== "string" ||
+      typeof email !== "string" ||
+      typeof password !== "string"
+    ) {
       return NextResponse.json(
-        { success: false, message: "Email is already registered." },
-        { status: 409 }
+        {
+          success: false,
+          message: "Invalid input.",
+        },
+        { status: 400 }
       );
     }
 
-    if (
-      typeof username !== "string" ||
-      typeof password !== "string" ||
-      typeof email !== "string"
-    ) {
+    const normalizedUsername = username.trim();
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedUsername || !normalizedEmail) {
       return NextResponse.json(
-        { success: false, message: "Invalid input." },
+        {
+          success: false,
+          message: "Username and email cannot be empty.",
+        },
         { status: 400 }
       );
     }
@@ -52,53 +59,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Generate a 6-digit OTP
-    const otp = randomInt(100000, 1000000).toString();
-
-    // Store only the OTP hash
-    const verificationToken = createHash("sha256")
-      .update(otp)
-      .digest("hex");
-
-    const verificationTokenExpiry = new Date(
-      Date.now() + 10 * 60 * 1000
-    );
-
-    const savedUser = await User.create({
-      username: username.trim(),
+    // 3. Check if user already exists
+    const existingUser = await User.findOne({
       email: normalizedEmail,
-      password: hashedPassword,
-      isVerified: false,
-      verificationToken,
-      verificationTokenExpiry,
     });
 
-    const emailResponse = await sendVerificationEmail(
-      normalizedEmail,
-      username.trim(),
-      otp
-    );
-
-    if (!emailResponse.success) {
-      // The account remains unverified.
-      // A resend-verification endpoint can issue another OTP.
+    if (existingUser) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Account created, but the verification email could not be sent. Please request a new code.",
+          message: "Email is already registered.",
         },
-        { status: 502 }
+        { status: 409 }
       );
     }
 
+    // 4. Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 5. Create user
+    const savedUser = await User.create({
+      username: normalizedUsername,
+      email: normalizedEmail,
+      password: hashedPassword,
+      isVerified: true,
+    });
+
+    // 6. Return safe user information
     return NextResponse.json(
       {
         success: true,
-        message:
-          "Account created! Check your email for the verification code.",
+        message: "User registered successfully.",
         user: {
           id: savedUser._id,
           username: savedUser.username,
@@ -118,7 +109,10 @@ export async function POST(request: NextRequest) {
       error.code === 11000
     ) {
       return NextResponse.json(
-        { success: false, message: "Email is already registered." },
+        {
+          success: false,
+          message: "Email is already registered.",
+        },
         { status: 409 }
       );
     }

@@ -31,6 +31,12 @@ export const userSchema = new Schema({
     verificationTokenExpiry: {
         type: Date,
     },
+    loginOtpHash: {
+        type: String,
+    },
+    loginOtpExpiry: {
+        type: Date,
+    },
     forgotPasswordToken: String,
     forgotPasswordExpiry: Date,
 })
