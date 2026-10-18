@@ -24,11 +24,15 @@ export const userSchema = new Schema({
     isAdmin: {
       type: Boolean,
       default: false,
+    }, 
+    verificationToken: {
+        type: String,
+    },
+    verificationTokenExpiry: {
+        type: Date,
     },
     forgotPasswordToken: String,
     forgotPasswordExpiry: Date,
-    verificationToken: String,
-    verificationTokenExpiry: Date,
 })
 
 
