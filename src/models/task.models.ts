@@ -1,28 +1,53 @@
-import mongoose, { Schema } from "mongoose"
+import mongoose, { Schema, Document, Model } from "mongoose";
 
-const taskModel = new Schema(
-    {
-        title:{
-            type:String,
-            required:[true,"You have to add the task"]
-        },
-        description:{
-            type:String,
-            required:false
-        },
-        date:{
-            type:Date,
-            requrired:[false,"You have to add the date"]
-        },
-        status:{
-            type:String,
-            required:true
-        }
+export interface ITask extends Document {
+  title: string;
+  description?: string;
+  date: Date;
+  status: "pending" | "completed";
+  userId: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const taskSchema = new Schema<ITask>(
+  {
+    title: {
+      type: String,
+      required: [true, "You have to add the task"],
+      trim: true,
+      maxlength: [150, "Task title cannot exceed 150 characters"],
     },
-    {
-        timestamps:true
-    }
-)
 
-const tasks= mongoose.models.tasks || mongoose.model("Task",taskModel)
-export default tasks;
+    description: {
+      type: String,
+      default: "",
+      maxlength: [1000, "Description cannot exceed 1000 characters"],
+    },
+
+    date: {
+      type: Date,
+      required: [true, "You have to add the date"],
+    },
+
+    status: {
+      type: String,
+      enum: ["pending", "completed"],
+      default: "pending",
+    },
+
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "users",
+      required: true,
+      index: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const TaskModel: Model<ITask> = mongoose.models.Task || mongoose.model<ITask>("Task", taskSchema);
+
+export default TaskModel;
