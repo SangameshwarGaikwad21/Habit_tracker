@@ -28,8 +28,9 @@ export async function getCurrentUser() {
 
     await ConnectionTODB();
 
-    const user = await User.findById(decoded.userId).select(
-      "-password -loginOtpHash -loginOtpExpiry -verificationToken -verificationTokenExpiry -forgotPasswordToken -forgotPasswordExpiry"
+    const user = await User.findById(decoded.userId)
+    .select(
+        "-password -loginOtpHash -loginOtpExpiry -verificationToken -verificationTokenExpiry -forgotPasswordToken -forgotPasswordExpiry"
     );
 
     return user;
