@@ -2,6 +2,7 @@ import User from "@/models/user.models";
 import { ConnectionTODB } from "@/config/Db";
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
+import jwt from "jsonwebtoken";
 
 export async function POST(request: NextRequest) {
   try {
@@ -71,27 +72,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: "OTP verified successfully.",
-        user: {
-          id: user._id,
-          username: user.username,
-          email: user.email,
+    const token = jwt.sign(
+        {
+          userId: user._id.toString(),
         },
-      },
-      { status: 200 }
-    );
-  } catch (error: unknown) {
-    console.error("OTP verification error:", error);
+        process.env.JWT_SECRET!,
+        {
+          expiresIn: "7d",
+        }
+      );
 
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Unable to verify OTP. Please try again.",
-      },
-      { status: 500 }
-    );
-  }
-}
+      const response = NextResponse.json(
+        {
+          success: true,
+          message: "OTP verified successfully.",
+          user: {
+            id: user._id.toString(),
+            username: user.username,
+            email: user.email,
+          },
+        },
+        { status: 200 }
+      );
+
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    return response;
+      } catch (error: unknown) {
+        console.error("OTP verification error:", error);
+
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Unable to verify OTP. Please try again.",
+          },
+          { status: 500 }
+        );
+      }
+    }

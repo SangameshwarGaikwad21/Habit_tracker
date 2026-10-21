@@ -1,5 +1,4 @@
 import mongoose, { Schema } from "mongoose";
-import bcrypt from "bcryptjs";
 
 export const userSchema = new Schema({
     username:{
@@ -40,8 +39,6 @@ export const userSchema = new Schema({
     forgotPasswordToken: String,
     forgotPasswordExpiry: Date,
 })
-
-
 
 const User = mongoose.models.users || mongoose.model("users",userSchema)
 export default User; 
