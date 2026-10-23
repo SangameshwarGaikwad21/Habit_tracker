@@ -1,8 +1,9 @@
 import TaskModel from "@/models/task.models";
 import { ConnectionTODB } from "@/config/Db";
-import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -13,10 +14,9 @@ export async function PATCH(
   { params }: RouteContext
 ) {
   try {
-    // 1. Check authentication
-    const session = await auth();
+    const token = (await cookies()).get("token")?.value;
 
-    if (!session?.user?.id) {
+    if (!token) {
       return NextResponse.json(
         {
           success: false,
@@ -26,7 +26,40 @@ export async function PATCH(
       );
     }
 
-    // 2. Get task ID from URL
+    const secret = process.env.JWT_SECRET;
+
+    if (!secret) {
+      console.error("JWT_SECRET is missing");
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Server configuration error.",
+        },
+        { status: 500 }
+      );
+    }
+
+    let userId: string;
+
+    try {
+      const verified = jwt.verify(token, secret);
+
+      if ( typeof verified === "string" || typeof verified.userId !== "string") {
+        throw new Error("Invalid token payload");
+      }
+      userId = verified.userId;
+    } 
+    catch {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid or expired session. Please log in again.",
+        },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -39,19 +72,13 @@ export async function PATCH(
       );
     }
 
-    // 3. Connect to MongoDB
     await ConnectionTODB();
 
-    // 4. Read request body
     const body: unknown = await request.json();
 
-    if (
-      typeof body !== "object" ||
-      body === null ||
-      !("title" in body) ||
-      typeof body.title !== "string" ||
-      !body.title.trim()
-    ) {
+    if ( typeof body !== "object" || body === null || 
+      !("title" in body) || typeof body.title !== "string" || 
+      !body.title.trim()) {
       return NextResponse.json(
         {
           success: false,
@@ -61,11 +88,11 @@ export async function PATCH(
       );
     }
 
-    // 5. Update only the authenticated user's task
+    // 7. Update only a task owned by this user
     const updatedTask = await TaskModel.findOneAndUpdate(
       {
         _id: id,
-        userId: session.user.id,
+        userId,
       },
       {
         $set: {
@@ -78,7 +105,7 @@ export async function PATCH(
       }
     );
 
-    // 6. Check whether the task exists
+    // 8. Handle missing task or task not owned by user
     if (!updatedTask) {
       return NextResponse.json(
         {
@@ -89,7 +116,7 @@ export async function PATCH(
       );
     }
 
-    // 7. Return updated task
+    // 9. Return updated task
     return NextResponse.json(
       {
         success: true,
