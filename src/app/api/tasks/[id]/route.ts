@@ -137,3 +137,114 @@ export async function PATCH(
     );
   }
 }
+
+
+
+
+
+export async function DELETE(
+  request: Request,
+  { params }: RouteContext
+) {
+  try {
+    // 1. Authenticate the user
+    const token = (await cookies()).get("token")?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Unauthorized. Please log in.",
+        },
+        { status: 401 }
+      );
+    }
+
+    const secret = process.env.JWT_SECRET;
+
+    if (!secret) {
+      console.error("JWT_SECRET is missing");
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Server configuration error.",
+        },
+        { status: 500 }
+      );
+    }
+
+    // 2. Verify the JWT
+    let userId: string;
+
+    try {
+      const verified = jwt.verify(token, secret);
+      if ( typeof verified === "string" || typeof verified.userId !== "string") {
+        throw new Error("Invalid token payload");
+      }
+      userId = verified.userId;
+    } 
+    catch {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid or expired session.",
+        },
+        { status: 401 }
+      );
+    }
+
+    // 3. Get and validate task ID
+    const { id } = await params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid task ID.",
+        },
+        { status: 400 }
+      );
+    }
+
+    // 4. Connect to MongoDB
+    await ConnectionTODB();
+
+    // 5. Delete only this user's task
+    const deletedTask = await TaskModel.findOneAndDelete({
+      _id: id,
+      userId,
+    });
+
+    // 6. Handle missing task
+    if (!deletedTask) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Task not found.",
+        },
+        { status: 404 }
+      );
+    }
+
+    // 7. Return success
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Task deleted successfully!",
+        task: deletedTask,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Delete task error:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to delete task.",
+      },
+      { status: 500 }
+    );
+  }
+}
