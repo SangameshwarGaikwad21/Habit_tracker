@@ -27,7 +27,6 @@ const taskSchema = new Schema<ITask>(
 
     date: {
       type: Date,
-      required: [true, "You have to add the date"],
     },
 
     status: {

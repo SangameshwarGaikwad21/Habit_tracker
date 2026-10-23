@@ -1,7 +1,14 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
+import bcrypt from "bcryptjs";
+
+import User from "@/models/user.models";
+import { ConnectionTODB } from "@/config/Db";
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.AUTH_SECRET,
+
   providers: [
     Credentials({
       name: "Credentials",
@@ -18,16 +25,74 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
 
       async authorize(credentials) {
-        // We'll connect this to your MongoDB User model
-        // and verify passwords with bcrypt in the next step.
+        const email =
+          typeof credentials?.email === "string"
+            ? credentials.email.trim().toLowerCase()
+            : "";
 
-        return null;
+        const password =
+          typeof credentials?.password === "string"
+            ? credentials.password
+            : "";
+
+        if (!email || !password) {
+          return null;
+        }
+
+        await ConnectionTODB();
+
+        const user = await User.findOne({ email }).select(
+          "+password"
+        );
+
+        if (!user) {
+          return null;
+        }
+
+        const isPasswordValid = await bcrypt.compare(
+          password,
+          user.password
+        );
+
+        if (!isPasswordValid) {
+          return null;
+        }
+
+        // If your application requires email OTP verification,
+        // also enforce that the user's email is verified here.
+        if (!user.isVerified) {
+          return null;
+        }
+
+        return {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+        };
       },
     }),
   ],
 
   session: {
     strategy: "jwt",
+  },
+
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+
+      return token;
+    },
+
+    async session({ session, token }) {
+      if (session.user && token.id) {
+        session.user.id = token.id as string;
+      }
+
+      return session;
+    },
   },
 
   pages: {
