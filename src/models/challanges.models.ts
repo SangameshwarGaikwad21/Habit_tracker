@@ -3,10 +3,11 @@ import mongoose, { Schema, type Model } from "mongoose";
 
 export interface IChallenge {
   title: string;
-  number: 21 | 75 | 90;
-  date: Date;
-  status: "pending" | "completed";
-  userId: mongoose.Types.ObjectId;
+  slug: string;
+  description: string;
+  duration: 21 | 75 | 90;
+  rules: string[];
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,31 +18,38 @@ const challengeSchema = new Schema<IChallenge>(
       type: String,
       required: [true, "Challenge title is required"],
       trim: true,
+      maxlength: 100,
     },
 
-    number: {
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
+
+    description: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 1000,
+    },
+
+    duration: {
       type: Number,
       enum: [21, 75, 90],
-      default: 21,
       required: true,
     },
 
-    date: {
-      type: Date,
-      default: Date.now,
+    rules: {
+      type: [String],
+      default: [],
     },
 
-    status: {
-      type: String,
-      enum: ["pending", "completed"],
-      default: "pending",
-    },
-
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-      index: true,
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   {
@@ -49,6 +57,8 @@ const challengeSchema = new Schema<IChallenge>(
   }
 );
 
-const ChallengeModel: Model<IChallenge> = mongoose.models.Challenge || mongoose.model<IChallenge>("Challenge", challengeSchema);
+const ChallengeModel: Model<IChallenge> =
+  mongoose.models.Challenge ||
+  mongoose.model<IChallenge>("Challenge", challengeSchema);
 
 export default ChallengeModel;
