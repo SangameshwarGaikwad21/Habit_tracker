@@ -1,10 +1,34 @@
 
 import mongoose, { Schema, type Model } from "mongoose";
 
+const routineItemSchema = new Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    startTime: {
+      type: String,
+      required: true,
+      match: /^([01]\d|2[0-3]):[0-5]\d$/,
+    },
+    endTime: {
+      type: String,
+      required: true,
+      match: /^([01]\d|2[0-3]):[0-5]\d$/,
+    },
+  },
+  { _id: true }
+);
+
 export interface IRoutine {
   userId: mongoose.Types.ObjectId;
-  title: string;
-  time: string;
+  routine: {
+    title: string;
+    startTime: string;
+    endTime: string;
+  }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -15,29 +39,18 @@ const routineSchema = new Schema<IRoutine>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
+      unique: true,
     },
-
-    title: {
-      type: String,
-      required: [true, "Routine title is required"],
-      trim: true,
-    },
-
-    time: {
-      type: String,
-      required: [true, "Routine time is required"],
-      match: [
-        /^([01]\d|2[0-3]):[0-5]\d$/,
-        "Time must be in HH:mm format",
-      ],
+    routine: {
+      type: [routineItemSchema],
+      default: [],
     },
   },
   { timestamps: true }
 );
 
-routineSchema.index({ userId: 1, time: 1 });
-
-const RoutineModel: Model<IRoutine> = mongoose.models.Routine || mongoose.model<IRoutine>("Routine", routineSchema);
+const RoutineModel: Model<IRoutine> =
+  mongoose.models.Routine ||
+  mongoose.model<IRoutine>("Routine", routineSchema);
 
 export default RoutineModel;
