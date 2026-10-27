@@ -136,43 +136,61 @@ export async function PATCH(
 
 
 // DELETE: Delete the user's complete routine
+
 export async function DELETE(
   request: Request,
-  { params }: RouteContext
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // 1. Authenticate user
-    const userId = await getAuthenticatedUserId();
+    const token = (await cookies()).get("token")?.value;
+    const secret = process.env.JWT_SECRET;
 
-    if (!userId) {
+    if (!token || !secret) {
       return NextResponse.json(
-        { success: false, message: "Unauthorized. Please log in." },
+        { success: false, message: "Unauthorized" },
         { status: 401 }
       );
     }
 
-    // 2. Validate routine document ID
+    const decoded = jwt.verify(token, secret);
+
+    if (
+      typeof decoded === "string" ||
+      typeof decoded.userId !== "string" ||
+      !mongoose.isValidObjectId(decoded.userId)
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Invalid token" },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
 
     if (!mongoose.isValidObjectId(id)) {
       return NextResponse.json(
-        { success: false, message: "Invalid routine ID." },
+        { success: false, message: "Invalid activity ID" },
         { status: 400 }
       );
     }
 
-    // 3. Connect to database
     await ConnectionTODB();
 
-    // 4. Delete only the routine owned by this user
-    const deletedRoutine = await RoutineModel.findOneAndDelete({
-      _id: id,
-      userId,
-    });
+    const result = await RoutineModel.updateOne(
+      {
+        userId: decoded.userId,
+        "routine._id": id,
+      },
+      {
+        $pull: {
+          routine: { _id: id },
+        },
+      }
+    );
 
-    if (!deletedRoutine) {
+    if (result.matchedCount === 0) {
       return NextResponse.json(
-        { success: false, message: "Routine not found." },
+        { success: false, message: "Routine activity not found" },
         { status: 404 }
       );
     }
@@ -180,17 +198,17 @@ export async function DELETE(
     return NextResponse.json(
       {
         success: true,
-        message: "Routine deleted successfully!",
-        routine: deletedRoutine,
+        message: "Routine activity deleted successfully",
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Delete routine error:", error);
+    console.error("Delete routine activity error:", error);
 
     return NextResponse.json(
-      { success: false, message: "Failed to delete routine." },
+      { success: false, message: "Internal server error" },
       { status: 500 }
     );
   }
 }
+
