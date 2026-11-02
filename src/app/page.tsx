@@ -1,369 +1,374 @@
-
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Theme = "blue" | "light";
 
-const features = [
-  {
-    number: "01",
-    title: "Build better habits",
-    description:
-      "Create meaningful habits and build consistency through small, repeatable actions.",
-    icon: "✓",
-    color: "sky",
-  },
-  {
-    number: "02",
-    title: "Plan your routine",
-    description:
-      "Organize your day, structure your time, and create a routine that works for you.",
-    icon: "◷",
-    color: "violet",
-  },
-  {
-    number: "03",
-    title: "Track your progress",
-    description:
-      "Understand your progress, review your consistency, and keep moving toward your goals.",
-    icon: "↗",
-    color: "emerald",
-  },
+/* ---------------------------------- Data ---------------------------------- */
+
+const initialHabits = [
+  { id: "water", label: "Drink 2L of water", time: "All day", done: true },
+  { id: "read", label: "Read 20 pages", time: "7:30 AM", done: true },
+  { id: "workout", label: "30 min workout", time: "6:00 PM", done: false },
+  { id: "plan", label: "Plan tomorrow", time: "9:30 PM", done: false },
 ];
+
+const routine = [
+  { time: "6:30", title: "Wake up and stretch", state: "done" },
+  { time: "7:30", title: "Read 20 pages", state: "done" },
+  { time: "9:00", title: "Deep work block", state: "now" },
+  { time: "18:00", title: "30 min workout", state: "next" },
+  { time: "21:30", title: "Plan tomorrow", state: "next" },
+] as const;
 
 const steps = [
   {
-    number: "01",
-    title: "Set your goals",
+    title: "Pick a few habits",
     description:
-      "Choose the habits and routines that support the person you want to become.",
+      "Start with two or three. Name them, set a time, and decide how often you want to do them.",
   },
   {
-    number: "02",
-    title: "Show up daily",
+    title: "Check them off daily",
     description:
-      "Complete your habits, follow your routine, and focus on the next step.",
+      "Open Today, follow your routine, and tick each habit as you finish it. It takes seconds.",
   },
   {
-    number: "03",
-    title: "Grow consistently",
+    title: "Review your week",
     description:
-      "Review your progress, learn from your experience, and keep improving.",
+      "See which habits stuck, which days slipped, and adjust your plan before the next week starts.",
   },
 ];
 
 const faqs = [
   {
-    question: "What is Habit Tracker?",
+    question: "What is Habitflow?",
     answer:
-      "Habit Tracker helps you organize daily habits, manage routines, participate in challenges, and understand your progress.",
+      "Habitflow is a place to manage your daily habits and routines, join challenges, and see your progress over time.",
+  },
+  {
+    question: "Is it free to start?",
+    answer:
+      "Yes. You can create an account and start tracking habits right away.",
   },
   {
     question: "Can I create my own habits?",
     answer:
-      "Yes. You can create and manage habits based on your personal goals and daily activities.",
+      "Yes. Create habits around your own goals, choose when they happen, and edit them any time.",
   },
   {
-    question: "Can I organize my daily routine?",
+    question: "Can I plan my whole day, not just habits?",
     answer:
-      "Yes. Create a daily schedule with activities and time slots that fit your lifestyle.",
+      "Yes. Build a daily routine with activities and time slots, then follow it from the Today view.",
   },
   {
-    question: "Is the website mobile-friendly?",
+    question: "What happens if I miss a day?",
     answer:
-      "The landing page adapts to mobile phones, tablets, and desktop screens.",
+      "Your history stays intact. Habitflow shows you the gap so you can pick up again, with no guilt screens.",
+  },
+  {
+    question: "Does it work on my phone?",
+    answer:
+      "Yes. The site adapts to phones, tablets, and desktop screens.",
   },
 ];
 
-const footerGroups = [
-  {
-    title: "Explore",
-    links: [
-      { label: "Features", href: "#features" },
-      { label: "How it works", href: "#how-it-works" },
-      { label: "FAQ", href: "#faq" },
-    ],
-  },
-  {
-    title: "Account",
-    links: [
-      { label: "Sign in", href: "/login" },
-      { label: "Create account", href: "/register" },
-    ],
-  },
-];
+// Deterministic sample data for the consistency preview (7 weeks x 7 days)
+const heatmap = Array.from({ length: 49 }, (_, i) => {
+  const week = Math.floor(i / 7);
+  const day = i % 7;
+  const base = (week * 2 + day * 3 + (i % 5)) % 5;
+  return Math.min(4, Math.max(0, base + (week > 3 ? 1 : 0) - (day === 6 ? 1 : 0)));
+});
+
+/* ---------------------------------- Page ---------------------------------- */
 
 export default function Home() {
   const [theme, setTheme] = useState<Theme>("blue");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("habit-theme");
-
-    if (savedTheme === "blue" || savedTheme === "light") {
-      setTheme(savedTheme);
+    try {
+      const saved = localStorage.getItem("habit-theme");
+      if (saved === "blue" || saved === "light") setTheme(saved);
+    } catch {
+      /* storage unavailable */
     }
-
     setMounted(true);
   }, []);
 
   useEffect(() => {
     if (!mounted) return;
-
     document.documentElement.dataset.theme = theme;
-    localStorage.setItem("habit-theme", theme);
+    try {
+      localStorage.setItem("habit-theme", theme);
+    } catch {
+      /* storage unavailable */
+    }
   }, [theme, mounted]);
 
   function toggleTheme() {
-    setTheme((current) => (current === "blue" ? "light" : "blue"));
+    setTheme((c) => (c === "blue" ? "light" : "blue"));
   }
-
-  const surface =
-    "border-[var(--border-color)] bg-[var(--card-bg)]";
-  const muted = "text-[var(--text-secondary)]";
-  const heading = "text-[var(--text-primary)]";
 
   return (
     <main
       data-theme={theme}
-      className="min-h-screen overflow-x-clip bg-[var(--page-bg)] text-[var(--text-primary)] transition-colors duration-300"
+      className="landing-page min-h-screen overflow-x-hidden transition-colors duration-300"
     >
       {/* Navbar */}
-      <header className="sticky top-0 z-40 border-b border-[var(--border-color)] bg-[var(--page-bg)]/90 backdrop-blur-xl">
-        <nav
-          aria-label="Main navigation"
-          className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4 lg:px-8"
-        >
-          <Link href="/" className="flex shrink-0 items-center gap-2 sm:gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 text-lg font-bold text-white sm:h-10 sm:w-10">
+      <header className="site-header sticky top-0 z-50 border-b backdrop-blur-xl">
+        <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-4 sm:px-8">
+          <Link href="/" className="flex shrink-0 items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 text-lg font-bold text-black">
               H
             </span>
-            <span className="text-base font-semibold sm:text-lg">
-              habit<span className="text-sky-500">flow</span>
+            <span className="text-xl font-bold tracking-tight">
+              habit<span className="accent-text">flow</span>
             </span>
           </Link>
 
-          <div className={`hidden items-center gap-6 text-sm md:flex ${muted}`}>
-            <a href="#features" className="transition hover:text-sky-500">
-              Features
-            </a>
-            <a href="#how-it-works" className="transition hover:text-sky-500">
-              How it works
-            </a>
-            <a href="#faq" className="transition hover:text-sky-500">
-              FAQ
-            </a>
+          <div className="hidden items-center gap-8 text-sm md:flex">
+            <a href="#features" className="nav-link">Features</a>
+            <a href="#how-it-works" className="nav-link">How it works</a>
+            <a href="#faq" className="nav-link">FAQ</a>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             <button
               type="button"
               onClick={toggleTheme}
               aria-label={
-                theme === "blue"
-                  ? "Switch to white theme"
-                  : "Switch to blue theme"
+                theme === "blue" ? "Switch to light theme" : "Switch to dark theme"
               }
-              title={
-                theme === "blue" ? "Switch to light mode" : "Switch to blue mode"
-              }
-              className={`flex h-10 w-10 items-center justify-center rounded-xl border text-lg transition hover:scale-105 ${surface}`}
+              title={theme === "blue" ? "Switch to light mode" : "Switch to dark mode"}
+              className="theme-button flex h-10 w-10 items-center justify-center rounded-xl border text-lg transition hover:scale-105"
             >
               {theme === "blue" ? "☀️" : "🌙"}
             </button>
 
             <Link
               href="/login"
-              className={`hidden rounded-lg px-3 py-2 text-sm transition hover:text-sky-500 sm:inline-flex ${muted}`}
+              className="nav-link hidden rounded-lg px-3 py-2 text-sm sm:inline-flex"
             >
               Sign in
             </Link>
 
-            <Link
-              href="/register"
-              className="rounded-xl bg-sky-400 px-3 py-2.5 text-xs font-semibold text-slate-950 transition hover:bg-sky-300 sm:px-4 sm:text-sm"
-            >
-              Get started ↗
+            <Link href="/register" className="btn-primary px-3 py-2.5 text-xs sm:px-4 sm:text-sm">
+              Get started
             </Link>
           </div>
         </nav>
       </header>
 
-      {/* Hero */}
-      <section className="relative isolate">
+      {/* Hero: message left, working demo right */}
+      <section className="hero-section relative overflow-hidden px-5 pb-20 pt-14 sm:px-8 lg:pb-28 lg:pt-20">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_75%_15%,rgba(14,165,233,0.14),transparent_45%),radial-gradient(ellipse_at_10%_55%,rgba(37,99,235,0.10),transparent_45%)]"
+          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_70%_20%,rgba(14,165,233,0.16),transparent_55%)]"
         />
 
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-28">
-          <div className="min-w-0">
-            <div className="mb-6 inline-flex max-w-full items-center gap-2 rounded-full border border-sky-400/30 bg-sky-400/10 px-3 py-2 text-xs text-sky-600 dark:text-sky-300 sm:text-sm">
-              <span className="h-2 w-2 shrink-0 rounded-full bg-sky-400" />
-              Your journey to consistency starts here
-            </div>
-
-            <h1 className={`max-w-3xl text-4xl font-extrabold leading-[1.08] tracking-[-0.045em] min-[420px]:text-5xl sm:text-6xl lg:text-7xl ${heading}`}>
-              Build habits
+        <div className="mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+          <div>
+            <h1 className="hero-heading text-5xl font-extrabold leading-[1.05] tracking-[-0.045em] sm:text-6xl lg:text-7xl">
+              Plan your day.
               <br />
-              that{" "}
-              <span className="bg-gradient-to-r from-sky-500 via-sky-400 to-cyan-400 bg-clip-text text-transparent">
-                actually stick.
-              </span>
+              Check off your habits.
+              <br />
+              <span className="muted-highlight">See what sticks.</span>
             </h1>
 
-            <p className={`mt-5 max-w-xl text-base leading-7 sm:mt-7 sm:text-lg sm:leading-8 ${muted}`}>
-              Build routines that last, stay focused on what matters, and turn
-              your everyday efforts into meaningful progress.
+            <p className="muted-text mt-7 max-w-xl text-base leading-8 sm:text-lg">
+              Habitflow puts your habits, your daily routine, and your progress
+              on one screen, so you always know what to do next.
             </p>
 
-            <div className="mt-7 flex flex-col gap-3 min-[480px]:flex-row sm:mt-9 sm:gap-4">
-              <Link
-                href="/register"
-                className="group inline-flex w-full items-center justify-center gap-3 rounded-xl bg-sky-400 px-5 py-3.5 font-semibold text-slate-950 shadow-lg shadow-sky-500/20 transition hover:-translate-y-0.5 hover:bg-sky-300 min-[480px]:w-auto"
-              >
-                Start your journey
-                <span className="transition-transform group-hover:translate-x-1">
-                  →
-                </span>
+            <div className="mt-9 flex flex-col gap-4 min-[480px]:flex-row">
+              <Link href="/register" className="btn-primary group gap-3 px-7 py-4 shadow-lg shadow-cyan-500/20">
+                Start for free
+                <span className="transition-transform group-hover:translate-x-1">→</span>
               </Link>
-
               <a
                 href="#features"
-                className={`inline-flex w-full items-center justify-center rounded-xl border px-5 py-3.5 font-medium transition hover:border-sky-400/50 hover:bg-sky-400/10 min-[480px]:w-auto ${surface}`}
+                className="secondary-button inline-flex items-center justify-center rounded-xl border px-7 py-4 font-semibold transition hover:border-cyan-400/40 hover:bg-cyan-400/10"
               >
-                Explore features
+                See how it works
               </a>
             </div>
 
-            <div className={`mt-8 flex flex-wrap gap-x-5 gap-y-3 text-sm ${muted}`}>
-              <span>✓ Habit tracking</span>
-              <span>✓ Daily routines</span>
-              <span>✓ Progress insights</span>
-            </div>
+            <ul className="muted-text mt-10 flex flex-wrap gap-x-6 gap-y-3 text-sm">
+              <li>✓ Free to start</li>
+              <li>✓ Set up in a minute</li>
+              <li>✓ Works on any screen</li>
+            </ul>
           </div>
 
-          {/* Showcase without fake user data */}
-          <div className="relative mx-auto w-full min-w-0 max-w-xl">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -inset-5 -z-10 rounded-full bg-sky-500/10 blur-3xl sm:-inset-8"
-            />
-
-            <div className={`overflow-hidden rounded-2xl border shadow-2xl shadow-black/10 ${surface}`}>
-              <div className={`flex items-start justify-between gap-3 border-b px-4 py-4 sm:px-5 sm:py-5 ${surface}`}>
-                <div>
-                  <p className={`font-semibold ${heading}`}>
-                    Your personal space
-                  </p>
-                  <p className={`mt-1 text-sm leading-6 ${muted}`}>
-                    Everything you need to keep growing.
-                  </p>
-                </div>
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-sky-400/30 bg-sky-400/10 text-sky-500">
-                  ✦
-                </div>
-              </div>
-
-              <div className="space-y-3 p-3 sm:space-y-4 sm:p-6">
-                <ShowcaseCard
-                  icon="✓"
-                  title="Daily habits"
-                  description="Build consistency, one action at a time."
-                  color="sky"
-                />
-                <ShowcaseCard
-                  icon="◷"
-                  title="Personal routines"
-                  description="Structure your day around what matters."
-                  color="violet"
-                />
-                <ShowcaseCard
-                  icon="↗"
-                  title="Challenges and growth"
-                  description="Set goals and work toward meaningful progress."
-                  color="emerald"
-                />
-
-                <div className="group relative overflow-hidden rounded-xl border border-amber-400/30 bg-gradient-to-r from-amber-400/10 via-orange-400/10 to-rose-400/10 p-4 transition hover:border-amber-400/60 hover:shadow-lg hover:shadow-amber-500/10">
-                  <p className="text-center text-sm leading-6 text-amber-600 dark:text-amber-200">
-                    ✨ Progress isn&apos;t about perfection. It&apos;s about
-                    showing up consistently.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <TodayDemo />
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="scroll-mt-24 border-t border-[var(--border-color)]">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-          <SectionHeading
-            eyebrow="Features"
-            title="Make consistency your superpower."
-            description="Simple tools to help you focus on your goals, build momentum, and keep moving forward."
-          />
+      {/* Features: bento layout, each tile shows its own thing */}
+      <section
+        id="features"
+        className="content-section scroll-mt-20 border-t px-5 py-24 sm:px-8 lg:py-28"
+      >
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-2xl">
+            <h2 className="section-heading text-3xl font-bold tracking-tight sm:text-5xl">
+              Everything for a productive day, in one place.
+            </h2>
+            <p className="muted-text mt-5 max-w-xl leading-7">
+              Habits tell you what to repeat. Your routine tells you when.
+              Your progress tells you what is working.
+            </p>
+          </div>
 
-          <div className="mt-10 grid grid-cols-1 gap-4 sm:mt-14 sm:gap-5 md:grid-cols-3">
-            {features.map((feature) => (
-              <article
-                key={feature.number}
-                className={`group rounded-2xl border p-5 shadow-lg transition duration-300 hover:-translate-y-1 hover:shadow-xl sm:p-7 ${surface} ${feature.color === "sky" ? "hover:border-sky-400/50 hover:shadow-sky-500/10" : feature.color === "violet" ? "hover:border-violet-400/50 hover:shadow-violet-500/10" : "hover:border-emerald-400/50 hover:shadow-emerald-500/10"}`}
-              >
-                <span
-                  className={`flex h-12 w-12 items-center justify-center rounded-xl border text-xl transition-all duration-300 ${
-                    feature.color === "sky"
-                      ? "border-sky-400/30 bg-sky-400/10 text-sky-500 group-hover:bg-sky-400 group-hover:text-slate-950"
-                      : feature.color === "violet"
-                        ? "border-violet-400/30 bg-violet-400/10 text-violet-500 group-hover:bg-violet-400 group-hover:text-white"
-                        : "border-emerald-400/30 bg-emerald-400/10 text-emerald-500 group-hover:bg-emerald-400 group-hover:text-slate-950"
-                  }`}
+          <div className="mt-14 grid gap-5 lg:grid-cols-6">
+            {/* Habits */}
+            <article className="panel rounded-2xl border p-6 sm:p-7 lg:col-span-3">
+              <h3 className="text-xl font-semibold">Build habits that last</h3>
+              <p className="muted-text mt-2 max-w-md leading-7">
+                Set what you want to repeat and tick it off each day. Small
+                actions add up to a streak.
+              </p>
+
+              <div className="mt-7 space-y-3">
+                {[
+                  { name: "Morning walk", days: [1, 1, 1, 1, 0, 1, 1] },
+                  { name: "Read 20 pages", days: [1, 1, 0, 1, 1, 1, 0] },
+                  { name: "No phone after 10 PM", days: [0, 1, 1, 1, 1, 0, 1] },
+                ].map((h) => (
+                  <div key={h.name} className="soft-row flex items-center justify-between gap-4 rounded-xl px-4 py-3">
+                    <span className="text-sm font-medium">{h.name}</span>
+                    <span className="flex gap-1.5" aria-label="Last 7 days">
+                      {h.days.map((d, i) => (
+                        <span
+                          key={i}
+                          className={`h-5 w-5 rounded-md ${d ? "bg-cyan-400" : "dot-empty"}`}
+                        />
+                      ))}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </article>
+
+            {/* Routine */}
+            <article className="panel rounded-2xl border p-6 sm:p-7 lg:col-span-3">
+              <h3 className="text-xl font-semibold">Plan your routine by the hour</h3>
+              <p className="muted-text mt-2 max-w-md leading-7">
+                Give each activity a time slot and follow your day from top to
+                bottom.
+              </p>
+
+              <ol className="mt-7 space-y-1">
+                {routine.map((r) => (
+                  <li key={r.time} className="flex items-center gap-4 py-2">
+                    <span className="muted-text w-12 shrink-0 font-mono text-sm">{r.time}</span>
+                    <span
+                      className={`h-3 w-3 shrink-0 rounded-full ${
+                        r.state === "done"
+                          ? "bg-cyan-400"
+                          : r.state === "now"
+                          ? "bg-cyan-400 ring-4 ring-cyan-400/25"
+                          : "dot-empty"
+                      }`}
+                    />
+                    <span
+                      className={`text-sm ${
+                        r.state === "done" ? "muted-text line-through" : "font-medium"
+                      }`}
+                    >
+                      {r.title}
+                    </span>
+                    {r.state === "now" && (
+                      <span className="ml-auto rounded-full bg-cyan-400/15 px-2.5 py-0.5 text-xs font-semibold accent-text">
+                        Now
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </article>
+
+            {/* Progress */}
+            <article className="panel rounded-2xl border p-6 sm:p-7 lg:col-span-4">
+              <h3 className="text-xl font-semibold">See your consistency</h3>
+              <p className="muted-text mt-2 max-w-md leading-7">
+                Review the last seven weeks at a glance. Darker squares mean
+                more habits completed that day.
+              </p>
+
+              <div className="mt-7 overflow-x-auto">
+                <div
+                  className="grid w-max grid-flow-col grid-rows-7 gap-1.5"
+                  role="img"
+                  aria-label="Example heatmap of habit completion over seven weeks"
                 >
-                  {feature.icon}
-                </span>
+                  {heatmap.map((level, i) => (
+                    <span key={i} className={`h-6 w-6 rounded-md heat-${level}`} />
+                  ))}
+                </div>
+              </div>
+              <p className="muted-text mt-4 text-xs">Example data</p>
+            </article>
 
-                <p className="mt-5 font-mono text-xs text-[var(--text-secondary)]">
-                  {feature.number}
-                </p>
-                <h3 className={`mt-2 text-xl font-semibold ${heading}`}>
-                  {feature.title}
-                </h3>
-                <p className={`mt-3 leading-7 ${muted}`}>
-                  {feature.description}
-                </p>
-              </article>
-            ))}
+            {/* Challenges */}
+            <article className="panel rounded-2xl border p-6 sm:p-7 lg:col-span-2">
+              <h3 className="text-xl font-semibold">Take on challenges</h3>
+              <p className="muted-text mt-2 leading-7">
+                Set a goal for a fixed period and work toward it a day at a time.
+              </p>
+
+              <div className="mt-7">
+                <div className="flex items-baseline justify-between text-sm">
+                  <span className="font-medium">30 days of reading</span>
+                  <span className="muted-text">day 18 of 30</span>
+                </div>
+                <div
+                  className="soft-row mt-3 h-2.5 overflow-hidden rounded-full"
+                  role="progressbar"
+                  aria-valuenow={18}
+                  aria-valuemin={0}
+                  aria-valuemax={30}
+                  aria-label="Challenge progress"
+                >
+                  <div className="h-full w-[60%] rounded-full bg-gradient-to-r from-cyan-400 to-sky-500" />
+                </div>
+              </div>
+            </article>
           </div>
         </div>
       </section>
 
-      {/* How it works */}
+      {/* How it works: a real sequence */}
       <section
         id="how-it-works"
-        className="scroll-mt-24 border-t border-[var(--border-color)] bg-[var(--section-bg)]"
+        className="content-section scroll-mt-20 border-y px-5 py-24 sm:px-8 lg:py-28"
       >
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-          <SectionHeading
-            eyebrow="How it works"
-            title="Three steps to a better routine."
-          />
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-2xl">
+            <h2 className="section-heading text-3xl font-bold tracking-tight sm:text-5xl">
+              Start small. Three steps is all it takes.
+            </h2>
+            <p className="muted-text mt-5 max-w-xl leading-7">
+              You do not need to change everything in one day. Begin with one
+              habit and build from there.
+            </p>
+          </div>
 
-          <ol className="mt-10 grid grid-cols-1 gap-8 sm:mt-14 sm:gap-10 md:grid-cols-3">
-            {steps.map((step) => (
-              <li key={step.number}>
-                <span className="flex h-12 w-12 items-center justify-center rounded-full border border-sky-400/30 bg-sky-400/10 font-mono text-sky-500">
-                  {step.number}
+          <ol className="relative mt-16 grid gap-12 md:grid-cols-3 md:gap-8">
+            <div
+              aria-hidden="true"
+              className="step-line absolute left-7 top-7 hidden h-px w-[calc(100%-3.5rem)] md:block"
+            />
+            {steps.map((step, i) => (
+              <li key={step.title} className="relative">
+                <span className="step-badge relative flex h-14 w-14 items-center justify-center rounded-full border font-mono text-lg font-semibold">
+                  {i + 1}
                 </span>
-                <h3 className={`mt-5 text-xl font-semibold sm:mt-6 ${heading}`}>
-                  {step.title}
-                </h3>
-                <p className={`mt-3 leading-7 ${muted}`}>
-                  {step.description}
-                </p>
+                <h3 className="mt-6 text-xl font-semibold">{step.title}</h3>
+                <p className="muted-text mt-3 max-w-sm leading-7">{step.description}</p>
               </li>
             ))}
           </ol>
@@ -371,29 +376,30 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="scroll-mt-24 border-t border-[var(--border-color)]">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[1fr_1.6fr] lg:gap-12 lg:px-8 lg:py-24">
+      <section
+        id="faq"
+        className="content-section scroll-mt-20 border-b px-5 py-24 sm:px-8 lg:py-28"
+      >
+        <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
-            <h2 className={`text-3xl font-bold tracking-tight sm:text-4xl ${heading}`}>
+            <h2 className="section-heading text-4xl font-bold tracking-tight sm:text-5xl">
               Questions, answered.
             </h2>
-            <p className={`mt-4 max-w-sm leading-7 ${muted}`}>
-              Everything you need to know before starting your first habit.
+            <p className="muted-text mt-5 max-w-sm leading-7">
+              Everything to know before you add your first habit.
             </p>
           </div>
 
-          <div className={`divide-y divide-[var(--border-color)] rounded-2xl border bg-[var(--card-bg)] ${surface}`}>
+          <div className="faq-card divide-y overflow-hidden rounded-2xl border">
             {faqs.map((faq) => (
-              <details key={faq.question} className="group px-4 py-5 sm:px-6">
-                <summary className={`flex cursor-pointer list-none items-center justify-between gap-4 font-medium ${heading} [&::-webkit-details-marker]:hidden`}>
-                  <span>{faq.question}</span>
-                  <span className="shrink-0 text-xl text-sky-500 transition-transform group-open:rotate-45">
+              <details key={faq.question} className="group p-5 sm:p-6">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium [&::-webkit-details-marker]:hidden">
+                  {faq.question}
+                  <span className="accent-text shrink-0 text-xl transition-transform group-open:rotate-45">
                     +
                   </span>
                 </summary>
-                <p className={`mt-3 max-w-xl leading-7 ${muted}`}>
-                  {faq.answer}
-                </p>
+                <p className="muted-text mt-4 max-w-xl leading-7">{faq.answer}</p>
               </details>
             ))}
           </div>
@@ -401,150 +407,334 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section className="px-4 pb-14 sm:px-6 sm:pb-20 lg:px-8 lg:pb-24">
-        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl border border-sky-400/30 bg-gradient-to-br from-sky-100 via-blue-50 to-indigo-100 px-5 py-10 text-center dark:from-[#122a43] dark:via-[#102035] dark:to-[#11152d] sm:px-8 sm:py-14 lg:px-12 lg:py-20">
+      <section className="content-section px-5 py-24 sm:px-8 lg:py-28">
+        <div className="cta-card relative mx-auto max-w-5xl overflow-hidden rounded-3xl border px-6 py-16 text-center sm:px-12 sm:py-20">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-sky-400/20 blur-3xl"
+            className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl"
           />
           <div className="relative">
-            <p className="text-sm font-medium text-sky-700 dark:text-sky-300">
-              Your next chapter starts today
-            </p>
-            <h2 className="mx-auto mt-4 max-w-2xl text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-5xl">
-              Become who you want to be, one habit at a time.
+            <h2 className="section-heading mx-auto max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl">
+              Your next productive day starts with one habit.
             </h2>
-            <p className="mx-auto mt-5 max-w-xl leading-7 text-slate-600 dark:text-slate-400">
-              Start small. Stay consistent. Let your progress speak for itself.
+            <p className="muted-text mx-auto mt-6 max-w-xl leading-7">
+              Create your account, add a habit, and check it off today.
             </p>
-            <Link
-              href="/register"
-              className="mt-8 inline-flex w-full items-center justify-center gap-3 rounded-xl bg-sky-400 px-6 py-3.5 font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-sky-300 sm:w-auto sm:px-7"
-            >
-              Create your account →
+            <Link href="/register" className="btn-primary mt-9 gap-3 px-7 py-4">
+              Create your account
             </Link>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[var(--border-color)]">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-          <div className="grid grid-cols-2 gap-8 sm:gap-10 lg:grid-cols-3">
-            <div className="col-span-2 lg:col-span-1">
-              <Link href="/" className={`font-semibold ${heading}`}>
-                habit<span className="text-sky-500">flow</span>
+      <footer className="site-footer border-t px-5 py-12 sm:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid grid-cols-2 gap-10 md:grid-cols-3">
+            <div className="col-span-2 md:col-span-1">
+              <Link href="/" className="text-xl font-bold">
+                habit<span className="accent-text">flow</span>
               </Link>
-              <p className={`mt-3 max-w-xs text-sm leading-6 ${muted}`}>
+              <p className="muted-text mt-4 max-w-xs text-sm leading-7">
                 Build habits that actually stick. Made for progress, not
                 perfection.
               </p>
             </div>
 
-            {footerGroups.map((group) => (
-              <nav key={group.title} aria-label={group.title}>
-                <h2 className={`text-sm font-semibold ${heading}`}>
-                  {group.title}
-                </h2>
-                <ul className={`mt-4 space-y-3 text-sm ${muted}`}>
-                  {group.links.map((link) => (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        className="transition hover:text-sky-500"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            ))}
+            <FooterGroup
+              title="Explore"
+              links={[
+                { label: "Features", href: "#features" },
+                { label: "How it works", href: "#how-it-works" },
+                { label: "FAQ", href: "#faq" },
+              ]}
+            />
+            <FooterGroup
+              title="Account"
+              links={[
+                { label: "Sign in", href: "/login" },
+                { label: "Create account", href: "/register" },
+              ]}
+            />
           </div>
 
-          <p className={`mt-8 border-t border-[var(--border-color)] pt-6 text-xs ${muted} sm:mt-10`}>
-            © 2026 Habit Tracker. All rights reserved.
+          <p className="muted-text mt-12 border-t border-[var(--line)] pt-7 text-xs">
+            © 2026 Habitflow. All rights reserved.
           </p>
         </div>
       </footer>
+
+      {/* Theme styles */}
+      <style jsx global>{`
+        .landing-page {
+          --page: #080f1d;
+          --surface: #101a2a;
+          --soft: #ffffff0d;
+          --text: #f8fafc;
+          --muted: #9ca3af;
+          --line: #ffffff14;
+          --button-surface: #ffffff08;
+          --accent: #22d3ee;
+          --heat-0: #ffffff0f;
+          --heat-1: #22d3ee40;
+          --heat-2: #22d3ee80;
+          --heat-3: #22d3eec0;
+          --heat-4: #22d3ee;
+          background: var(--page);
+          color: var(--text);
+        }
+
+        .landing-page[data-theme="light"] {
+          --page: #ffffff;
+          --surface: #ffffff;
+          --soft: #f3f4f6;
+          --text: #111827;
+          --muted: #6b7280;
+          --line: #e5e7eb;
+          --button-surface: #f9fafb;
+          --accent: #0e7490;
+          --heat-0: #eef2f7;
+          --heat-1: #a5f3fc;
+          --heat-2: #67e8f9;
+          --heat-3: #22d3ee;
+          --heat-4: #0891b2;
+        }
+
+        .site-header {
+          background: color-mix(in srgb, var(--page) 88%, transparent);
+          border-color: var(--line);
+        }
+        .site-footer,
+        .content-section {
+          border-color: var(--line);
+        }
+
+        .accent-text { color: var(--accent); }
+        .muted-text { color: var(--muted); }
+        .hero-heading,
+        .section-heading { color: var(--text); }
+        .muted-highlight { color: var(--muted); }
+
+        .nav-link { color: var(--muted); transition: color 0.2s; }
+        .nav-link:hover { color: var(--accent); }
+
+        .btn-primary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 0.75rem;
+          background: #22d3ee;
+          color: #020617;
+          font-weight: 600;
+          transition: background 0.2s, transform 0.2s;
+        }
+        .btn-primary:hover { background: #67e8f9; transform: translateY(-2px); }
+
+        .secondary-button,
+        .theme-button {
+          border-color: var(--line);
+          background: var(--button-surface);
+          color: var(--text);
+        }
+
+        .panel,
+        .preview-card,
+        .faq-card,
+        .cta-card {
+          background: var(--surface);
+          border-color: var(--line);
+          color: var(--text);
+        }
+        .landing-page[data-theme="light"] .panel,
+        .landing-page[data-theme="light"] .preview-card {
+          box-shadow: 0 20px 50px rgb(15 23 42 / 7%);
+        }
+        .landing-page[data-theme="light"] .cta-card {
+          background: linear-gradient(135deg, #f8fafc, #eef2f7);
+        }
+        .landing-page[data-theme="light"] .hero-section {
+          background: radial-gradient(ellipse at 70% 20%, rgb(14 165 233 / 9%), transparent 55%);
+        }
+
+        .soft-row { background: var(--soft); }
+        .dot-empty { background: var(--heat-0); border: 1px solid var(--line); }
+        .demo-divider { border-color: var(--line); }
+
+        .heat-0 { background: var(--heat-0); }
+        .heat-1 { background: var(--heat-1); }
+        .heat-2 { background: var(--heat-2); }
+        .heat-3 { background: var(--heat-3); }
+        .heat-4 { background: var(--heat-4); }
+
+        .step-badge {
+          border-color: rgb(34 211 238 / 35%);
+          background: var(--page);
+          color: var(--accent);
+        }
+        .step-line {
+          background: linear-gradient(to right, rgb(34 211 238 / 45%), var(--line));
+        }
+
+        .habit-row:focus-visible,
+        .btn-primary:focus-visible,
+        .nav-link:focus-visible,
+        .theme-button:focus-visible,
+        .secondary-button:focus-visible,
+        summary:focus-visible {
+          outline: 2px solid var(--accent);
+          outline-offset: 3px;
+        }
+
+        .ring-progress { transition: stroke-dashoffset 0.5s ease; }
+
+        @media (prefers-reduced-motion: reduce) {
+          .landing-page *,
+          .landing-page *::before,
+          .landing-page *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+          }
+        }
+      `}</style>
     </main>
   );
 }
 
-function ShowcaseCard({
-  icon,
-  title,
-  description,
-  color,
-}: {
-  icon: string;
-  title: string;
-  description: string;
-  color: "sky" | "violet" | "emerald";
-}) {
-  const colors = {
-    sky: {
-      card: "border-sky-400/20 bg-gradient-to-br from-sky-400/10 via-blue-500/5 to-transparent hover:border-sky-400/60 hover:shadow-sky-500/10",
-      icon: "border-sky-400/20 bg-sky-400/10 text-sky-500 group-hover:border-sky-400/50 group-hover:bg-sky-400 group-hover:text-slate-950 group-hover:shadow-sky-400/30",
-      title: "group-hover:text-sky-500",
-    },
-    violet: {
-      card: "border-violet-400/20 bg-gradient-to-br from-violet-400/10 via-indigo-500/5 to-transparent hover:border-violet-400/60 hover:shadow-violet-500/10",
-      icon: "border-violet-400/20 bg-violet-400/10 text-violet-500 group-hover:border-violet-400/50 group-hover:bg-violet-400 group-hover:text-white group-hover:shadow-violet-400/30",
-      title: "group-hover:text-violet-500",
-    },
-    emerald: {
-      card: "border-emerald-400/20 bg-gradient-to-br from-emerald-400/10 via-teal-500/5 to-transparent hover:border-emerald-400/60 hover:shadow-emerald-500/10",
-      icon: "border-emerald-400/20 bg-emerald-400/10 text-emerald-500 group-hover:border-emerald-400/50 group-hover:bg-emerald-400 group-hover:text-slate-950 group-hover:shadow-emerald-400/30",
-      title: "group-hover:text-emerald-500",
-    },
-  };
+/* ------------------------- Interactive hero preview ------------------------ */
+
+function TodayDemo() {
+  const [habits, setHabits] = useState(initialHabits);
+
+  const done = habits.filter((h) => h.done).length;
+  const total = habits.length;
+  const allDone = done === total;
+  const percent = Math.round((done / total) * 100);
+  const next = habits.find((h) => !h.done);
+
+  const radius = 52;
+  const circumference = useMemo(() => 2 * Math.PI * radius, []);
+  const offset = circumference * (1 - done / total);
+
+  function toggle(id: string) {
+    setHabits((list) =>
+      list.map((h) => (h.id === id ? { ...h, done: !h.done } : h))
+    );
+  }
 
   return (
-    <div
-      className={`group rounded-xl border p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-5 ${colors[color].card}`}
-    >
-      <div className="flex items-center gap-3 sm:gap-4">
-        <div
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border text-xl transition-all duration-300 group-hover:shadow-lg sm:h-12 sm:w-12 ${colors[color].icon}`}
-        >
-          {icon}
+    <div className="relative mx-auto w-full max-w-xl">
+      <div className="pointer-events-none absolute -inset-6 -z-10 rounded-full bg-cyan-500/[0.09] blur-3xl" />
+
+      <div className="preview-card overflow-hidden rounded-2xl border shadow-2xl">
+        {/* Header with progress ring */}
+        <div className="demo-divider flex items-center justify-between gap-4 border-b px-5 py-5 sm:px-6">
+          <div>
+            <p className="text-lg font-semibold">Today</p>
+            <p className="muted-text mt-1 text-sm" aria-live="polite">
+              {allDone
+                ? "All done. Nice work today."
+                : `${done} of ${total} habits done`}
+            </p>
+            <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-amber-400/15 px-3 py-1 text-xs font-semibold text-amber-500">
+              🔥 {allDone ? 13 : 12}-day streak
+            </p>
+          </div>
+
+          <div className="relative h-28 w-28 shrink-0">
+            <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90" aria-hidden="true">
+              <circle cx="60" cy="60" r={radius} fill="none" stroke="var(--heat-0)" strokeWidth="10" />
+              <circle
+                cx="60"
+                cy="60"
+                r={radius}
+                fill="none"
+                stroke="#22d3ee"
+                strokeWidth="10"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                strokeDashoffset={offset}
+                className="ring-progress"
+              />
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center text-xl font-bold">
+              {percent}%
+            </span>
+          </div>
         </div>
-        <div className="min-w-0">
-          <h2 className={`font-semibold text-[var(--text-primary)] transition-colors duration-300 ${colors[color].title}`}>
-            {title}
-          </h2>
-          <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">
-            {description}
-          </p>
+
+        {/* Habit list */}
+        <ul className="space-y-2 p-4 sm:p-5">
+          {habits.map((h) => (
+            <li key={h.id}>
+              <button
+                type="button"
+                onClick={() => toggle(h.id)}
+                aria-pressed={h.done}
+                className="habit-row soft-row flex w-full items-center gap-4 rounded-xl px-4 py-3.5 text-left transition hover:bg-cyan-400/10"
+              >
+                <span
+                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-sm font-bold transition ${
+                    h.done
+                      ? "border-cyan-400 bg-cyan-400 text-slate-950"
+                      : "border-[var(--line)] bg-transparent text-transparent"
+                  }`}
+                >
+                  ✓
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className={`block text-sm font-medium ${h.done ? "muted-text line-through" : ""}`}>
+                    {h.label}
+                  </span>
+                </span>
+                <span className="muted-text shrink-0 text-xs">{h.time}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+
+        {/* Next up */}
+        <div className="demo-divider border-t px-5 py-4 text-sm sm:px-6">
+          {next ? (
+            <p>
+              <span className="muted-text">Up next: </span>
+              <span className="font-semibold">{next.label}</span>
+              <span className="muted-text"> at {next.time}</span>
+            </p>
+          ) : (
+            <p className="font-semibold">Plan is complete. Rest up for tomorrow.</p>
+          )}
         </div>
       </div>
+
+      <p className="muted-text mt-4 text-center text-xs">
+        Try it: tap a habit to check it off.
+      </p>
     </div>
   );
 }
 
-function SectionHeading({
-  eyebrow,
+/* --------------------------------- Footer --------------------------------- */
+
+function FooterGroup({
   title,
-  description,
+  links,
 }: {
-  eyebrow: string;
   title: string;
-  description?: string;
+  links: { label: string; href: string }[];
 }) {
   return (
-    <div className="mx-auto max-w-2xl text-center">
-      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-500">
-        {eyebrow}
-      </p>
-      <h2 className="mt-4 text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-5xl">
-        {title}
-      </h2>
-      {description && (
-        <p className="mt-5 leading-7 text-[var(--text-secondary)]">
-          {description}
-        </p>
-      )}
-    </div>
+    <nav aria-label={title}>
+      <h2 className="text-sm font-semibold">{title}</h2>
+      <ul className="muted-text mt-5 space-y-3 text-sm">
+        {links.map((link) => (
+          <li key={link.href}>
+            <Link href={link.href} className="nav-link">
+              {link.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }
