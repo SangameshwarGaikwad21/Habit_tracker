@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import axiosInstance from "@/lib/axios";
 
 const features = [
   {
@@ -23,80 +24,7 @@ const features = [
 ];
 
 export default function RegisterPage() {
-  const router = useRouter();
-
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  }
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      setError("Password must contain at least 8 characters.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          password: formData.password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || data.error || "Registration failed.");
-      }
-
-      setSuccess(
-        data.message || "Account created successfully. Please verify your email."
-      );
-
-      setTimeout(() => {
-        router.push(
-          `/verify-email?email=${encodeURIComponent(formData.email.trim())}`
-        );
-      }, 1200);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong. Please try again."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
+  
   const inputStyle = {
     backgroundColor: "var(--input-bg)",
     color: "var(--text-primary)",
