@@ -1,9 +1,7 @@
+
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import axiosInstance from "@/lib/axios";
 
 const features = [
   {
@@ -24,7 +22,6 @@ const features = [
 ];
 
 export default function RegisterPage() {
-  
   const inputStyle = {
     backgroundColor: "var(--input-bg)",
     color: "var(--text-primary)",
@@ -32,34 +29,46 @@ export default function RegisterPage() {
   };
 
   const inputClass =
-    "mt-1.5 w-full rounded-xl border px-4 py-2.5 text-sm outline-none transition placeholder:opacity-50 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20";
+    "mt-1.5 w-full rounded-xl border px-4 py-3 text-sm outline-none transition placeholder:opacity-50 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20";
 
   return (
-    // h-dvh + overflow-hidden = the page never scrolls
     <main
-      className="h-dvh overflow-hidden transition-colors duration-300"
+      className="min-h-screen transition-colors duration-300"
       style={{
         backgroundColor: "var(--page-bg)",
         color: "var(--text-primary)",
       }}
     >
-      <div className="grid h-full lg:grid-cols-2">
-        {/* LEFT SIDE — BRANDING */}
+      <div className="grid min-h-screen lg:grid-cols-2">
+
+        {/* LEFT SIDE - BRANDING */}
+
         <section
-          className="relative hidden h-full overflow-hidden border-r p-10 lg:flex lg:flex-col lg:justify-between xl:p-14"
+          className="relative hidden min-h-screen overflow-hidden border-r p-10 lg:flex lg:flex-col lg:justify-between xl:p-14"
           style={{
             backgroundColor: "var(--section-bg)",
             borderColor: "var(--border-color)",
           }}
         >
+          {/* Background glow */}
+
           <div
             className="pointer-events-none absolute -left-24 top-32 h-72 w-72 rounded-full blur-3xl"
-            style={{ backgroundColor: "var(--accent)", opacity: 0.12 }}
+            style={{
+              backgroundColor: "var(--accent)",
+              opacity: 0.12,
+            }}
           />
+
           <div
             className="pointer-events-none absolute -bottom-24 right-0 h-80 w-80 rounded-full blur-3xl"
-            style={{ backgroundColor: "var(--accent)", opacity: 0.1 }}
+            style={{
+              backgroundColor: "var(--accent)",
+              opacity: 0.1,
+            }}
           />
+
+          {/* Logo */}
 
           <Link
             href="/"
@@ -74,12 +83,16 @@ export default function RegisterPage() {
             >
               H
             </span>
+
             habitflow
           </Link>
 
+          {/* Main branding content */}
+
           <div className="relative z-10 max-w-xl">
+
             <div
-              className="mb-5 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm"
+              className="mb-5 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm"
               style={{
                 borderColor: "var(--border-color)",
                 backgroundColor: "var(--card-bg)",
@@ -90,25 +103,32 @@ export default function RegisterPage() {
               Your journey to a better you
             </div>
 
-            <h1 className="text-4xl font-bold leading-tight tracking-tight xl:text-5xl">
+            <h1 className="text-4xl font-bold leading-tight tracking-tight xl:text-6xl">
               Small habits.
               <br />
-              <span style={{ color: "var(--accent)" }}>Big changes.</span>
+              <span style={{ color: "var(--accent)" }}>
+                Big changes.
+              </span>
             </h1>
 
             <p
-              className="mt-4 max-w-md text-base leading-7"
+              className="mt-5 max-w-md text-base leading-8"
               style={{ color: "var(--text-secondary)" }}
             >
-              Create routines that work for you, track your progress, and become
-              the person you want to be — one day at a time.
+              Create routines that work for you, track your progress,
+              and become the person you want to be — one day at a time.
             </p>
 
-            <div className="mt-7 space-y-4">
+            {/* Features */}
+
+            <div className="mt-9 space-y-6">
               {features.map((feature) => (
-                <div key={feature.title} className="flex items-start gap-4">
+                <div
+                  key={feature.title}
+                  className="flex items-start gap-4"
+                >
                   <div
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base font-bold"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg font-bold"
                     style={{
                       backgroundColor: "var(--card-bg)",
                       color: "var(--accent)",
@@ -119,9 +139,12 @@ export default function RegisterPage() {
                   </div>
 
                   <div>
-                    <h2 className="text-sm font-semibold">{feature.title}</h2>
+                    <h2 className="text-sm font-semibold">
+                      {feature.title}
+                    </h2>
+
                     <p
-                      className="mt-0.5 text-sm leading-5"
+                      className="mt-1 text-sm leading-6"
                       style={{ color: "var(--text-secondary)" }}
                     >
                       {feature.description}
@@ -131,18 +154,20 @@ export default function RegisterPage() {
               ))}
             </div>
 
-            {/* Quote card: only shown on tall screens so nothing overflows */}
+            {/* Motivational quote */}
+
             <div
-              className="mt-7 hidden rounded-2xl border p-5 [@media(min-height:820px)]:block"
+              className="mt-10 rounded-2xl border p-6"
               style={{
                 backgroundColor: "var(--card-bg)",
                 borderColor: "var(--border-color)",
               }}
             >
               <p className="text-base font-medium leading-7">
-                “You don&apos;t have to be perfect. You just have to keep showing
-                up.”
+                “You don't have to be perfect. You just have to keep
+                showing up.”
               </p>
+
               <p
                 className="mt-2 text-sm"
                 style={{ color: "var(--text-secondary)" }}
@@ -156,20 +181,24 @@ export default function RegisterPage() {
             className="relative z-10 text-sm"
             style={{ color: "var(--text-secondary)" }}
           >
-            © {new Date().getFullYear()} Habitflow. Built for your growth.
+            © 2026 Habitflow. Built for your growth.
           </p>
         </section>
 
-        {/* RIGHT SIDE — FORM */}
-        <section className="flex h-full items-center justify-center px-4 py-4 sm:px-10 lg:px-12 xl:px-20">
+        {/* RIGHT SIDE - REGISTER UI */}
+
+        <section className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-10 lg:px-12 xl:px-20">
+
           <div className="w-full max-w-xl">
-            {/* Mobile branding */}
+
+            {/* Mobile logo */}
+
             <Link
               href="/"
-              className="mb-4 inline-flex items-center gap-2 text-xl font-bold lg:hidden"
+              className="mb-8 inline-flex items-center gap-2 text-xl font-bold lg:hidden"
             >
               <span
-                className="flex h-9 w-9 items-center justify-center rounded-xl"
+                className="flex h-10 w-10 items-center justify-center rounded-xl"
                 style={{
                   backgroundColor: "var(--accent)",
                   color: "var(--accent-contrast)",
@@ -177,156 +206,151 @@ export default function RegisterPage() {
               >
                 H
               </span>
+
               habitflow
             </Link>
 
+            {/* Registration Card */}
+
             <div
-              className="rounded-3xl border p-5 shadow-xl sm:p-7"
+              className="rounded-3xl border p-6 shadow-xl sm:p-9"
               style={{
                 backgroundColor: "var(--card-bg)",
                 borderColor: "var(--border-color)",
-                boxShadow: "0 20px 60px rgba(0, 0, 0, 0.07)",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.07)",
               }}
             >
-              <div className="mb-4">
+              <div className="mb-8">
                 <p
-                  className="mb-2 text-xs font-bold tracking-[0.2em]"
+                  className="mb-3 text-xs font-bold tracking-[0.2em]"
                   style={{ color: "var(--accent)" }}
                 >
                   START YOUR JOURNEY
                 </p>
 
-                <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                <h2 className="text-3xl font-bold tracking-tight">
                   Create your account
                 </h2>
 
                 <p
-                  className="mt-2 hidden text-sm leading-6 sm:block"
+                  className="mt-3 text-sm leading-6"
                   style={{ color: "var(--text-secondary)" }}
                 >
                   Join Habitflow and start building better habits today.
                 </p>
               </div>
 
-              {error && (
-                <div
-                  role="alert"
-                  className="mb-3 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2 text-sm text-red-500"
-                >
-                  {error}
-                </div>
-              )}
+              {/* UI-only form: no submit handler or API connection */}
 
-              {success && (
-                <div
-                  role="status"
-                  className="mb-3 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-600"
-                >
-                  {success}
-                </div>
-              )}
+              <div className="space-y-5">
 
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="name" className="text-sm font-medium">
-                    Full name
-                  </label>
-                  <input
-                    id="name"
-                    name="name"
-                    type="text"
-                    autoComplete="name"
-                    placeholder="Enter your full name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className={inputClass}
-                    style={inputStyle}
-                    required
-                    maxLength={100}
-                  />
-                </div>
+                {/* Name and Email */}
 
-                <div>
-                  <label htmlFor="email" className="text-sm font-medium">
-                    Email address
-                  </label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="you@example.com"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className={inputClass}
-                    style={inputStyle}
-                    required
-                  />
-                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label
+                      htmlFor="name"
+                      className="text-sm font-medium"
+                    >
+                      Full name
+                    </label>
+
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      autoComplete="name"
+                      placeholder="Enter your full name"
+                      className={inputClass}
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="text-sm font-medium"
+                    >
+                      Email address
+                    </label>
+
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="you@example.com"
+                      className={inputClass}
+                      style={inputStyle}
+                    />
+                  </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="password" className="text-sm font-medium">
-                    Password
-                  </label>
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    autoComplete="new-password"
-                    placeholder="At least 8 characters"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className={inputClass}
-                    style={inputStyle}
-                    minLength={8}
-                    required
-                  />
+                {/* Password and Confirm Password */}
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label
+                      htmlFor="password"
+                      className="text-sm font-medium"
+                    >
+                      Password
+                    </label>
+
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      autoComplete="new-password"
+                      placeholder="At least 8 characters"
+                      className={inputClass}
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="confirmPassword"
+                      className="text-sm font-medium"
+                    >
+                      Confirm password
+                    </label>
+
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      autoComplete="new-password"
+                      placeholder="Enter password again"
+                      className={inputClass}
+                      style={inputStyle}
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label
-                    htmlFor="confirmPassword"
-                    className="text-sm font-medium"
-                  >
-                    Confirm password
-                  </label>
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    autoComplete="new-password"
-                    placeholder="Enter your password again"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className={inputClass}
-                    style={inputStyle}
-                    minLength={8}
-                    required
-                  />
-                </div>
-                </div>
+                {/* Register Button */}
 
                 <button
-                  type="submit"
-                  disabled={loading}
-                  className="mt-1 flex w-full items-center justify-center rounded-xl px-4 py-3 font-semibold transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                  type="button"
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 font-semibold transition hover:brightness-110"
                   style={{
                     backgroundColor: "var(--accent)",
                     color: "var(--accent-contrast)",
                   }}
                 >
-                  {loading ? "Creating account..." : "Create account"}
+                  Create account
+                  <span>→</span>
                 </button>
-              </form>
+              </div>
+
+              {/* Login Link */}
 
               <p
-                className="mt-4 text-center text-sm"
+                className="mt-7 text-center text-sm"
                 style={{ color: "var(--text-secondary)" }}
               >
                 Already have an account?{" "}
+
                 <Link
                   href="/login"
                   className="font-semibold hover:underline"
@@ -338,7 +362,7 @@ export default function RegisterPage() {
             </div>
 
             <p
-              className="mt-4 hidden text-center text-xs leading-5 [@media(min-height:760px)]:block"
+              className="mt-6 text-center text-xs"
               style={{ color: "var(--text-secondary)" }}
             >
               Start small. Stay consistent. Become better.
