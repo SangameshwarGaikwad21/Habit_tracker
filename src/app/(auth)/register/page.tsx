@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 
@@ -26,8 +27,11 @@ const features = [
   },
 ];
 
+
+
 export default function RegisterPage() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
 
   const { isLoading, error, successMessage } = useAppSelector(
     (state) => state.auth
@@ -63,48 +67,47 @@ export default function RegisterPage() {
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    setValidationError("");
+  setValidationError("");
 
-    if (
-      !formData.username.trim() ||
-      !formData.email.trim() ||
-      !formData.password
-    ) {
-      setValidationError("Please fill in all required fields.");
-      return;
+  if (
+    !formData.username.trim() ||
+    !formData.email.trim() ||
+    !formData.password
+  ) {
+    setValidationError("Please fill in all required fields.");
+    return;
+  }
+
+  if (formData.password !== formData.confirmPassword) {
+    setValidationError("Passwords do not match.");
+    return;
+  }
+
+  if (formData.password.length < 8) {
+    setValidationError("Password must be at least 8 characters.");
+    return;
+  }
+
+  try {
+    const result = await dispatch(
+      registerUser({
+        username: formData.username.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+      })
+    ).unwrap();
+
+    if (result.success) {
+      router.push("/");
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      setValidationError("Passwords do not match.");
-      return;
-    }
+  } catch (err) {
+    console.error("Registration failed:", err);
+  }
+};
 
-    if (formData.password.length < 8) {
-      setValidationError("Password must be at least 8 characters.");
-      return;
-    }
-
-    try {
-      await dispatch(
-        registerUser({
-          username: formData.username.trim(),
-          email: formData.email.trim(),
-          password: formData.password,
-        })
-      ).unwrap();
-
-      setFormData({
-        username: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-      });
-    } catch (err) {
-      console.error("Registration failed:", err);
-    }
-  };
 
   return (
     <main
