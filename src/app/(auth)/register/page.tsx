@@ -100,7 +100,7 @@ export default function RegisterPage() {
     ).unwrap();
 
     if (result.success) {
-      router.push("/");
+      router.push("/dashboard");
     }
 
   } catch (err) {
