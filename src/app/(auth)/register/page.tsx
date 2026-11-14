@@ -2,6 +2,11 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
+
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { registerUser } from "@/redux/fetures/auth.Slice";
 
 const features = [
   {
@@ -22,6 +27,21 @@ const features = [
 ];
 
 export default function RegisterPage() {
+  const dispatch = useAppDispatch();
+
+  const { isLoading, error, successMessage } = useAppSelector(
+    (state) => state.auth
+  );
+
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [validationError, setValidationError] = useState("");
+
   const inputStyle = {
     backgroundColor: "var(--input-bg)",
     color: "var(--text-primary)",
@@ -30,6 +50,61 @@ export default function RegisterPage() {
 
   const inputClass =
     "mt-1.5 w-full rounded-xl border px-4 py-3 text-sm outline-none transition placeholder:opacity-50 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20";
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    setValidationError("");
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    setValidationError("");
+
+    if (
+      !formData.username.trim() ||
+      !formData.email.trim() ||
+      !formData.password
+    ) {
+      setValidationError("Please fill in all required fields.");
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setValidationError("Passwords do not match.");
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setValidationError("Password must be at least 8 characters.");
+      return;
+    }
+
+    try {
+      await dispatch(
+        registerUser({
+          username: formData.username.trim(),
+          email: formData.email.trim(),
+          password: formData.password,
+        })
+      ).unwrap();
+
+      setFormData({
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+    } catch (err) {
+      console.error("Registration failed:", err);
+    }
+  };
 
   return (
     <main
@@ -50,9 +125,7 @@ export default function RegisterPage() {
             borderColor: "var(--border-color)",
           }}
         >
-          {/* Background glow */}
-
-          <div
+        <div
             className="pointer-events-none absolute -left-24 top-32 h-72 w-72 rounded-full blur-3xl"
             style={{
               backgroundColor: "var(--accent)",
@@ -90,7 +163,6 @@ export default function RegisterPage() {
           {/* Main branding content */}
 
           <div className="relative z-10 max-w-xl">
-
             <div
               className="mb-5 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm"
               style={{
@@ -188,7 +260,6 @@ export default function RegisterPage() {
         {/* RIGHT SIDE - REGISTER UI */}
 
         <section className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-10 lg:px-12 xl:px-20">
-
           <div className="w-full max-w-xl">
 
             {/* Mobile logo */}
@@ -240,9 +311,9 @@ export default function RegisterPage() {
                 </p>
               </div>
 
-              {/* UI-only form: no submit handler or API connection */}
+              {/* Registration Form */}
 
-              <div className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-5">
 
                 {/* Name and Email */}
 
@@ -257,12 +328,15 @@ export default function RegisterPage() {
 
                     <input
                       id="name"
-                      name="name"
+                      name="username"
                       type="text"
                       autoComplete="name"
                       placeholder="Enter your full name"
                       className={inputClass}
                       style={inputStyle}
+                      value={formData.username}
+                      onChange={handleChange}
+                      required
                     />
                   </div>
 
@@ -282,6 +356,9 @@ export default function RegisterPage() {
                       placeholder="you@example.com"
                       className={inputClass}
                       style={inputStyle}
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
                     />
                   </div>
                 </div>
@@ -305,6 +382,9 @@ export default function RegisterPage() {
                       placeholder="At least 8 characters"
                       className={inputClass}
                       style={inputStyle}
+                      value={formData.password}
+                      onChange={handleChange}
+                      required
                     />
                   </div>
 
@@ -324,24 +404,53 @@ export default function RegisterPage() {
                       placeholder="Enter password again"
                       className={inputClass}
                       style={inputStyle}
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      required
                     />
                   </div>
                 </div>
 
+                {/* Validation Error */}
+
+                {validationError && (
+                  <p className="text-sm text-red-500" role="alert">
+                    {validationError}
+                  </p>
+                )}
+
+                {/* API Error */}
+
+                {error && (
+                  <p className="text-sm text-red-500" role="alert">
+                    {error}
+                  </p>
+                )}
+
+                {/* API Success */}
+
+                {successMessage && (
+                  <p className="text-sm text-green-600" role="status">
+                    {successMessage}
+                  </p>
+                )}
+
                 {/* Register Button */}
 
                 <button
-                  type="button"
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 font-semibold transition hover:brightness-110"
+                  type="submit"
+                  disabled={isLoading}
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 font-semibold transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                   style={{
                     backgroundColor: "var(--accent)",
                     color: "var(--accent-contrast)",
                   }}
                 >
-                  Create account
-                  <span>→</span>
+                  {isLoading ? "Creating account..." : "Create account"}
+
+                  {!isLoading && <span>→</span>}
                 </button>
-              </div>
+              </form>
 
               {/* Login Link */}
 
