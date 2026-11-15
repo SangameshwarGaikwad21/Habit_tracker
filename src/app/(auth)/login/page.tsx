@@ -1,378 +1,205 @@
 "use client";
-import Link from "next/link";
 
-const benefits = [
-  {
-    icon: "✓",
-    title: "Stay consistent",
-    description: "Keep building the habits that move you forward.",
-  },
-  {
-    icon: "↗",
-    title: "Track your growth",
-    description: "See your progress and celebrate every milestone.",
-  },
-  {
-    icon: "◎",
-    title: "Own your day",
-    description: "Stay focused on your routines and daily goals.",
-  },
+import Link from "next/link";
+import { useState, type FormEvent } from "react";
+import { motion } from "framer-motion";
+
+const perks = [
+  { icon: "✓", label: "Stay consistent" },
+  { icon: "↗", label: "Track your growth" },
+  { icon: "◎", label: "Own your day" },
 ];
 
-export default function LoginPage() {
-  const inputStyle = {
-    backgroundColor: "var(--input-bg)",
-    color: "var(--text-primary)",
-    borderColor: "var(--border-color)",
-  };
+const inputStyle = {
+  backgroundColor: "var(--input-bg, #111827)",
+  color: "var(--text-primary, #f8fafc)",
+  borderColor: "var(--border-color, #334155)",
+};
 
-  const inputClass =
-    "mt-1.5 w-full rounded-xl border px-4 py-3 text-sm outline-none transition placeholder:opacity-50 focus:border-sky-400 focus:ring-2 focus:ring-sky-400/20";
+const inputClass =
+  "mt-2 w-full rounded-xl border px-4 py-3.5 text-sm outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-400/10";
+
+export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
+
+  // UI-only for now. Replace this with your login thunk when the API is ready.
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+  };
 
   return (
     <main
-      className="min-h-screen transition-colors duration-300"
+      className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10 sm:px-6"
       style={{
-        backgroundColor: "var(--page-bg)",
-        color: "var(--text-primary)",
+        backgroundColor: "var(--page-bg, #080d18)",
+        color: "var(--text-primary, #f8fafc)",
       }}
     >
-      <div className="grid min-h-screen lg:grid-cols-2">
+      {/* Soft background glow */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-24 top-10 h-80 w-80 rounded-full blur-3xl"
+        style={{ backgroundColor: "var(--accent, #38bdf8)", opacity: 0.13 }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-24 -left-16 h-96 w-96 rounded-full blur-3xl"
+        style={{ backgroundColor: "var(--accent, #38bdf8)", opacity: 0.1 }}
+      />
 
-        {/* LEFT SIDE - LOGIN FORM */}
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-10 w-full max-w-md"
+      >
+        {/* Logo above the card */}
+        <Link
+          href="/"
+          className="mx-auto mb-6 flex w-fit items-center gap-3 text-2xl font-bold tracking-tight"
+        >
+          <span
+            className="flex h-11 w-11 items-center justify-center rounded-2xl text-xl"
+            style={{
+              backgroundColor: "var(--accent, #38bdf8)",
+              color: "var(--accent-contrast, #06111e)",
+            }}
+          >
+            H
+          </span>
+          habitflow
+        </Link>
 
-        <section className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-10 lg:px-12 xl:px-20">
-
-          <div className="w-full max-w-xl">
-
-            {/* Mobile Logo */}
-
-            <Link
-              href="/"
-              className="mb-8 inline-flex items-center gap-2 text-xl font-bold lg:hidden"
-            >
-              <span
-                className="flex h-10 w-10 items-center justify-center rounded-xl"
-                style={{
-                  backgroundColor: "var(--accent)",
-                  color: "var(--accent-contrast)",
-                }}
-              >
-                H
-              </span>
-              habitflow
-            </Link>
-
-            {/* Login Card */}
-
-            <div
-              className="rounded-3xl border p-6 shadow-xl sm:p-9"
-              style={{
-                backgroundColor: "var(--card-bg)",
-                borderColor: "var(--border-color)",
-                boxShadow: "0 20px 60px rgba(0,0,0,0.07)",
-              }}
-            >
-              <div className="mb-8">
-                <p
-                  className="mb-3 text-xs font-bold tracking-[0.2em]"
-                  style={{ color: "var(--accent)" }}
-                >
-                  WELCOME BACK
-                </p>
-
-                <h1 className="text-3xl font-bold tracking-tight">
-                  Welcome back!
-                </h1>
-
-                <p
-                  className="mt-3 text-sm leading-6"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  Your journey doesn't stop here. Sign in and keep
-                  making progress every day.
-                </p>
-              </div>
-
-              {/* UI-only Login Form */}
-
-              <div className="space-y-5">
-
-                {/* Email */}
-
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="text-sm font-medium"
-                  >
-                    Email address
-                  </label>
-
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="you@example.com"
-                    className={inputClass}
-                    style={inputStyle}
-                  />
-                </div>
-
-                {/* Password */}
-
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="text-sm font-medium"
-                  >
-                    Password
-                  </label>
-
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    autoComplete="current-password"
-                    placeholder="Enter your password"
-                    className={inputClass}
-                    style={inputStyle}
-                  />
-                </div>
-
-                {/* Remember Me and Forgot Password */}
-
-                <div className="flex flex-wrap items-center justify-between gap-3">
-
-                  <label
-                    className="flex cursor-pointer items-center gap-2 text-sm"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 rounded accent-sky-400"
-                    />
-                    Remember me
-                  </label>
-
-                  <Link
-                    href="/forgot-password"
-                    className="text-sm font-semibold transition hover:underline"
-                    style={{ color: "var(--accent)" }}
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-
-                {/* Sign In Button */}
-
-                <button
-                  type="button"
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 font-semibold transition hover:brightness-110"
-                  style={{
-                    backgroundColor: "var(--accent)",
-                    color: "var(--accent-contrast)",
-                  }}
-                >
-                  Sign in
-                  <span>→</span>
-                </button>
-              </div>
-
-              {/* Divider */}
-
-              <div className="relative my-7 flex items-center">
-                <div
-                  className="h-px flex-1"
-                  style={{ backgroundColor: "var(--border-color)" }}
-                />
-                <span
-                  className="px-4 text-xs"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  OR
-                </span>
-                <div
-                  className="h-px flex-1"
-                  style={{ backgroundColor: "var(--border-color)" }}
-                />
-              </div>
-
-              {/* Register Link */}
-
-              <p
-                className="text-center text-sm"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                Don't have an account?{" "}
-
-                <Link
-                  href="/register"
-                  className="font-semibold hover:underline"
-                  style={{ color: "var(--accent)" }}
-                >
-                  Create account
-                </Link>
-              </p>
-            </div>
-
-            <p
-              className="mt-6 text-center text-xs"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              Small steps every day lead to big changes.
-            </p>
-          </div>
-        </section>
-
-        {/* RIGHT SIDE - BRANDING */}
-
-        <section
-          className="relative hidden min-h-screen overflow-hidden border-l p-10 lg:flex lg:flex-col lg:justify-between xl:p-14"
+        {/* Card */}
+        <div
+          className="rounded-3xl border p-6 sm:p-9"
           style={{
-            backgroundColor: "var(--section-bg)",
-            borderColor: "var(--border-color)",
+            backgroundColor: "var(--card-bg, #111827)",
+            borderColor: "var(--border-color, #263449)",
+            boxShadow: "0 24px 80px rgba(0,0,0,0.22)",
           }}
         >
-
-          {/* Background Glow */}
-
-          <div
-            className="pointer-events-none absolute -right-24 top-32 h-72 w-72 rounded-full blur-3xl"
-            style={{
-              backgroundColor: "var(--accent)",
-              opacity: 0.12,
-            }}
-          />
-
-          <div
-            className="pointer-events-none absolute -bottom-24 left-0 h-80 w-80 rounded-full blur-3xl"
-            style={{
-              backgroundColor: "var(--accent)",
-              opacity: 0.1,
-            }}
-          />
-
-          {/* Logo */}
-
-          <Link
-            href="/"
-            className="relative z-10 inline-flex w-fit items-center gap-3 text-2xl font-bold tracking-tight"
+          <h1 className="text-3xl font-bold tracking-tight">Welcome back!</h1>
+          <p
+            className="mt-2 text-sm leading-6"
+            style={{ color: "var(--text-secondary, #94a3b8)" }}
           >
-            <span
-              className="flex h-11 w-11 items-center justify-center rounded-2xl text-xl"
-              style={{
-                backgroundColor: "var(--accent)",
-                color: "var(--accent-contrast)",
-              }}
-            >
-              H
-            </span>
+            Every day is a fresh start. Sign in and keep making progress.
+          </p>
 
-            habitflow
-          </Link>
-
-          {/* Main Content */}
-
-          <div className="relative z-10 max-w-xl">
-
-            <div
-              className="mb-5 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm"
-              style={{
-                borderColor: "var(--border-color)",
-                backgroundColor: "var(--card-bg)",
-                color: "var(--text-secondary)",
-              }}
-            >
-              <span style={{ color: "var(--accent)" }}>✦</span>
-              Your progress is waiting for you
+          <form onSubmit={handleSubmit} className="mt-7 space-y-4">
+            <div>
+              <label htmlFor="email" className="text-sm font-medium">
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                className={inputClass}
+                style={inputStyle}
+              />
             </div>
 
-            <h2 className="text-4xl font-bold leading-tight tracking-tight xl:text-6xl">
-              Every day is a
-              <br />
-              <span style={{ color: "var(--accent)" }}>
-                fresh start.
-              </span>
-            </h2>
-
-            <p
-              className="mt-5 max-w-md text-base leading-8"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              You've already started building a better version of
-              yourself. Come back, stay focused, and keep moving
-              toward the goals that matter.
-            </p>
-
-            {/* Benefits */}
-
-            <div className="mt-9 space-y-6">
-              {benefits.map((benefit) => (
-                <div
-                  key={benefit.title}
-                  className="flex items-start gap-4"
+            <div>
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="text-sm font-medium">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  aria-pressed={showPassword}
+                  className="text-xs font-medium hover:underline"
+                  style={{ color: "var(--accent, #38bdf8)" }}
                 >
-                  <div
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg font-bold"
-                    style={{
-                      backgroundColor: "var(--card-bg)",
-                      color: "var(--accent)",
-                      border: "1px solid var(--border-color)",
-                    }}
-                  >
-                    {benefit.icon}
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-semibold">
-                      {benefit.title}
-                    </h3>
-
-                    <p
-                      className="mt-1 text-sm leading-6"
-                      style={{ color: "var(--text-secondary)" }}
-                    >
-                      {benefit.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                placeholder="Enter your password"
+                className={inputClass}
+                style={inputStyle}
+              />
             </div>
 
-            {/* Motivational Quote */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <label
+                className="flex cursor-pointer items-center gap-2 text-sm"
+                style={{ color: "var(--text-secondary, #94a3b8)" }}
+              >
+                <input type="checkbox" className="h-4 w-4 rounded accent-sky-400" />
+                Remember me
+              </label>
 
-            <div
-              className="mt-10 rounded-2xl border p-6"
+              <Link
+                href="/forgot-password"
+                className="text-sm font-semibold transition hover:underline"
+                style={{ color: "var(--accent, #38bdf8)" }}
+              >
+                Forgot password?
+              </Link>
+            </div>
+
+            <button
+              type="submit"
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 font-semibold transition hover:-translate-y-0.5 hover:brightness-110"
               style={{
-                backgroundColor: "var(--card-bg)",
-                borderColor: "var(--border-color)",
+                backgroundColor: "var(--accent, #38bdf8)",
+                color: "var(--accent-contrast, #06111e)",
               }}
             >
-              <p className="text-base font-medium leading-7">
-                “Success is the sum of small efforts, repeated day
-                in and day out.”
-              </p>
+              Sign in
+              <span aria-hidden="true">→</span>
+            </button>
+          </form>
 
-              <p
-                className="mt-2 text-sm"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                Keep showing up. Your future self will thank you.
-              </p>
-            </div>
+          {/* Divider */}
+          <div className="my-6 flex items-center">
+            <div className="h-px flex-1" style={{ backgroundColor: "var(--border-color, #263449)" }} />
+            <span className="px-4 text-xs" style={{ color: "var(--text-secondary, #94a3b8)" }}>
+              or
+            </span>
+            <div className="h-px flex-1" style={{ backgroundColor: "var(--border-color, #263449)" }} />
           </div>
 
-          {/* Footer */}
-
-          <p
-            className="relative z-10 text-sm"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            © 2026 Habitflow. Every day, a better you.
+          <p className="text-center text-sm" style={{ color: "var(--text-secondary, #94a3b8)" }}>
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/register"
+              className="font-semibold hover:underline"
+              style={{ color: "var(--accent, #38bdf8)" }}
+            >
+              Create account
+            </Link>
           </p>
-        </section>
-      </div>
+        </div>
+
+        {/* Perks under the card */}
+        <ul
+          className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs"
+          style={{ color: "var(--text-secondary, #94a3b8)" }}
+        >
+          {perks.map((perk) => (
+            <li key={perk.label} className="flex items-center gap-2">
+              <span style={{ color: "var(--accent, #38bdf8)" }} aria-hidden="true">
+                {perk.icon}
+              </span>
+              {perk.label}
+            </li>
+          ))}
+        </ul>
+
+        <p className="mt-6 text-center text-xs" style={{ color: "var(--text-secondary, #94a3b8)" }}>
+          © 2026 Habitflow. Every day, a better you.
+        </p>
+      </motion.div>
     </main>
   );
 }
