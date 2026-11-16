@@ -19,7 +19,7 @@ const navigation = [
     title: "WORKSPACE",
     items: [
       {
-        name: "Dashboard",
+        name: "Overview",
         href: "/dashboard",
         icon: LayoutDashboard,
       },
