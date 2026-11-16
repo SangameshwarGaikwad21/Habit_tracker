@@ -64,9 +64,11 @@ export default function LoginPage() {
         })
       ).unwrap();
 
-      if (result.success) {
-        router.push("/dashboard");
-      }
+      if (result.success && result.requiresOtp) {
+      router.push(
+        `/verify-otp?email=${encodeURIComponent(result.email)}`
+      );
+    }
     } catch (err) {
       console.error("Login failed:", err);
     }

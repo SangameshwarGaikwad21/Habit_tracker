@@ -28,8 +28,9 @@ interface RegisterResponse {
 
 interface LoginResponse {
   success: boolean;
+  requiresOtp: boolean;
   message: string;
-  user: RegisteredUser;
+  email: string;
 }
 
 interface AuthState {
@@ -38,6 +39,8 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   successMessage: string | null;
+  pendingEmail: string | null;
+  requiresOtp: boolean;
 }
 
 const initialState: AuthState = {
@@ -46,6 +49,8 @@ const initialState: AuthState = {
   isLoading: false,
   error: null,
   successMessage: null,
+  pendingEmail: null,
+  requiresOtp: false,
 };
 
 export const registerUser = createAsyncThunk<
@@ -154,9 +159,12 @@ const authSlice = createSlice({
 
     builder.addCase(loginUser.fulfilled, (state, action) => {
       state.isLoading = false;
-      state.user = action.payload.user;
-      state.isAuthenticated = true;
+      state.pendingEmail = action.payload.email;
+      state.requiresOtp = action.payload.requiresOtp;
       state.successMessage = action.payload.message;
+
+      // Do not authenticate the user yet.
+      state.isAuthenticated = false;
     });
 
     builder.addCase(loginUser.rejected, (state, action) => {
