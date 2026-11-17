@@ -43,6 +43,12 @@ interface AuthState {
   requiresOtp: boolean;
 }
 
+interface UserProfileResponse {
+  success: boolean;
+  message: string;
+  user: RegisteredUser;
+}
+
 const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
@@ -53,11 +59,7 @@ const initialState: AuthState = {
   requiresOtp: false,
 };
 
-export const registerUser = createAsyncThunk<
-  RegisterResponse,
-  RegisterPayload,
-  { rejectValue: string }
->(
+export const registerUser = createAsyncThunk<RegisterResponse,RegisterPayload,{ rejectValue: string }>(
   "auth/register",
   async (userData, { rejectWithValue }) => {
     try {
@@ -84,11 +86,7 @@ export const registerUser = createAsyncThunk<
   }
 );
 
-export const loginUser = createAsyncThunk<
-  LoginResponse,
-  LoginPayload,
-  { rejectValue: string }
->(
+export const loginUser = createAsyncThunk<LoginResponse,LoginPayload, { rejectValue: string }>(
   "auth/login",
   async (userData, { rejectWithValue }) => {
     try {
@@ -110,6 +108,30 @@ export const loginUser = createAsyncThunk<
       return rejectWithValue(
         axiosError.response?.data?.message ||
           "Invalid email or password. Please try again."
+      );
+    }
+  }
+);
+
+export const UserProfile = createAsyncThunk<UserProfileResponse, void, { rejectValue: string }>(
+  "auth/userProfile",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get<UserProfileResponse>("/users/profile");
+
+      if (!response.data.success) {
+        return rejectWithValue(
+          response.data.message || "Failed to fetch user profile."
+        );
+      }
+
+      return response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+
+      return rejectWithValue(
+        axiosError.response?.data?.message ||
+          "Something went wrong. Please try again."
       );
     }
   }
@@ -173,9 +195,30 @@ const authSlice = createSlice({
       state.error =
         action.payload || "Login failed. Please try again.";
     });
+
+    // USER PROFILE PENDING
+    builder.addCase(UserProfile.pending, (state) => {
+      state.isLoading = true;
+      state.error = null;
+    });
+
+    // USER PROFILE SUCCESS
+    builder.addCase(UserProfile.fulfilled, (state, action) => {
+      state.isLoading = false;
+      state.user = action.payload.user;
+      state.isAuthenticated = true;
+    });
+
+    // USER PROFILE FAILED
+    builder.addCase(UserProfile.rejected, (state, action) => {
+      state.isLoading = false;
+      state.user = null;
+      state.isAuthenticated = false;
+      state.error =
+        action.payload || "Failed to fetch user profile.";
+    });
   },
 });
-
 
 export const { clearAuthMessages, logout } = authSlice.actions;
 
