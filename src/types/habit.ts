@@ -1,3 +1,4 @@
+
 export interface Habit {
   _id: string;
   title: string;
@@ -11,15 +12,6 @@ export interface Habit {
 
 export interface CreateHabitPayload {
   title: string;
-}
-
-export interface UpdateHabitPayload {
-  id: string;
-  title: string;
-}
-
-export interface DeleteHabitPayload {
-  id: string;
 }
 
 export interface HabitState {

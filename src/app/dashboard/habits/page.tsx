@@ -1,20 +1,47 @@
+
 "use client";
-import { useState } from "react";
+
+import { useEffect, useState } from "react";
+
 import {
   useAppDispatch,
   useAppSelector,
 } from "@/redux/hooks";
-import { createHabit } from "@/redux/fetures/habit.slice";
+
+import {
+  createHabit,
+  fetchHabits,
+  updateHabit,
+  deleteHabit,
+  clearHabitMessages,
+} from "@/redux/fetures/habit.slice";
 
 export default function HabitsPage() {
   const dispatch = useAppDispatch();
 
-  const { habits, isLoading, error, successMessage } =
-    useAppSelector((state) => state.habit);
+  const {
+    habits,
+    isLoading,
+    isFetching,
+    isUpdating,
+    deletingHabitId,
+    error,
+    successMessage,
+  } = useAppSelector((state) => state.habit);
 
   const [title, setTitle] = useState("");
   const [showForm, setShowForm] = useState(false);
 
+  // Edit states
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
+
+  // Fetch habits when page loads
+  useEffect(() => {
+    dispatch(fetchHabits());
+  }, [dispatch]);
+
+  // Statistics
   const completed = habits.filter(
     (habit) => habit.status === "completed"
   ).length;
@@ -23,17 +50,69 @@ export default function HabitsPage() {
     (habit) => habit.status === "pending"
   ).length;
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  // CREATE HABIT
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
     e.preventDefault();
 
     if (!title.trim()) return;
 
     try {
-      await dispatch(createHabit({ title: title.trim() })).unwrap();
+      await dispatch(
+        createHabit({ title: title.trim() })
+      ).unwrap();
+
       setTitle("");
       setShowForm(false);
     } catch (err) {
       console.error("Failed to create habit:", err);
+    }
+  };
+
+  // OPEN EDIT FORM
+  const handleEdit = (id: string, currentTitle: string) => {
+    dispatch(clearHabitMessages());
+
+    setEditingId(id);
+    setEditingTitle(currentTitle);
+  };
+
+  // UPDATE HABIT
+  const handleUpdate = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
+    e.preventDefault();
+
+    if (!editingId || !editingTitle.trim()) return;
+
+    try {
+      await dispatch(
+        updateHabit({
+          id: editingId,
+          title: editingTitle.trim(),
+        })
+      ).unwrap();
+
+      setEditingId(null);
+      setEditingTitle("");
+    } catch (err) {
+      console.error("Failed to update habit:", err);
+    }
+  };
+
+  // DELETE HABIT
+  const handleDelete = async (id: string) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this habit?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await dispatch(deleteHabit({ id })).unwrap();
+    } catch (err) {
+      console.error("Failed to delete habit:", err);
     }
   };
 
@@ -47,13 +126,18 @@ export default function HabitsPage() {
             <h1 className="text-3xl font-bold tracking-tight">
               My Habits
             </h1>
+
             <p className="mt-2 text-sm text-[#8296B2]">
               Build consistency, one habit at a time.
             </p>
           </div>
 
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => {
+              dispatch(clearHabitMessages());
+              setShowForm(!showForm);
+              setEditingId(null);
+            }}
             className="flex items-center justify-center gap-2 rounded-xl bg-[#35B9EF] px-5 py-3 text-sm font-semibold text-[#071421] transition hover:bg-[#64CCF5]"
           >
             <span className="text-xl">+</span>
@@ -63,7 +147,6 @@ export default function HabitsPage() {
 
         {/* STATISTICS */}
         <section className="grid gap-5 sm:grid-cols-3">
-
           <StatCard
             title="Total Habits"
             value={habits.length}
@@ -84,8 +167,27 @@ export default function HabitsPage() {
             icon="◷"
             accent="text-amber-400"
           />
-
         </section>
+
+        {/* ERROR MESSAGE */}
+        {error && (
+          <div
+            role="alert"
+            className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400"
+          >
+            {error}
+          </div>
+        )}
+
+        {/* SUCCESS MESSAGE */}
+        {successMessage && (
+          <div
+            role="status"
+            className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-400"
+          >
+            ✓ {successMessage}
+          </div>
+        )}
 
         {/* ADD HABIT FORM */}
         {showForm && (
@@ -94,6 +196,7 @@ export default function HabitsPage() {
               <h2 className="text-lg font-semibold">
                 Create a New Habit
               </h2>
+
               <p className="mt-1 text-sm text-[#8296B2]">
                 What do you want to improve today?
               </p>
@@ -128,17 +231,12 @@ export default function HabitsPage() {
                 </button>
               </div>
 
-              {error && (
-                <p role="alert" className="mt-3 text-sm text-red-400">
-                  {error}
-                </p>
-              )}
-
               <button
                 type="button"
                 onClick={() => {
                   setShowForm(false);
                   setTitle("");
+                  dispatch(clearHabitMessages());
                 }}
                 className="mt-4 text-sm text-[#8296B2] transition hover:text-white"
               >
@@ -148,12 +246,6 @@ export default function HabitsPage() {
           </section>
         )}
 
-        {successMessage && (
-          <p role="status" className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-400">
-            {successMessage}
-          </p>
-        )}
-
         {/* HABIT LIST HEADER */}
         <section>
           <div className="mb-5 flex items-center justify-between">
@@ -161,6 +253,7 @@ export default function HabitsPage() {
               <h2 className="text-xl font-semibold">
                 All Habits
               </h2>
+
               <p className="mt-1 text-sm text-[#8296B2]">
                 Track your daily activities.
               </p>
@@ -171,8 +264,18 @@ export default function HabitsPage() {
             </span>
           </div>
 
-          {/* HABITS */}
-          {habits.length === 0 ? (
+          {/* FETCH LOADING */}
+          {isFetching ? (
+            <div className="rounded-2xl border border-[#26364C] bg-[#101C2D] py-16 text-center">
+              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#35B9EF]/30 border-t-[#35B9EF]" />
+
+              <p className="mt-4 text-sm text-[#8296B2]">
+                Loading your habits...
+              </p>
+            </div>
+          ) : habits.length === 0 ? (
+
+            /* EMPTY STATE */
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#293B52] bg-[#101C2D] px-5 py-16 text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#35B9EF]/10 text-3xl text-[#35B9EF]">
                 +
@@ -189,66 +292,144 @@ export default function HabitsPage() {
 
               <button
                 onClick={() => setShowForm(true)}
-                className="mt-6 rounded-xl bg-[#35B9EF] px-5 py-3 text-sm font-semibold text-[#071421] hover:bg-[#64CCF5]"
+                className="mt-6 rounded-xl bg-[#35B9EF] px-5 py-3 text-sm font-semibold text-[#071421] transition hover:bg-[#64CCF5]"
               >
                 Create Your First Habit
               </button>
             </div>
+
           ) : (
+
+            /* HABITS GRID */
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {habits.map((habit) => (
                 <article
                   key={habit._id}
                   className="group rounded-2xl border border-[#26364C] bg-[#101C2D] p-5 transition hover:border-[#35B9EF]/50 hover:bg-[#122237]"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#35B9EF]/10 text-xl text-[#35B9EF]">
-                        ◈
+
+                  {/* EDIT FORM */}
+                  {editingId === habit._id ? (
+                    <form onSubmit={handleUpdate}>
+                      <h3 className="mb-4 font-semibold">
+                        Edit Habit
+                      </h3>
+
+                      <input
+                        type="text"
+                        value={editingTitle}
+                        onChange={(e) =>
+                          setEditingTitle(e.target.value)
+                        }
+                        maxLength={150}
+                        required
+                        autoFocus
+                        className="w-full rounded-xl border border-[#35B9EF] bg-[#0B1220] px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-[#35B9EF]/10"
+                      />
+
+                      <div className="mt-4 flex gap-2">
+                        <button
+                          type="submit"
+                          disabled={isUpdating || !editingTitle.trim()}
+                          className="flex-1 rounded-lg bg-[#35B9EF] px-3 py-2 text-sm font-semibold text-[#071421] transition hover:bg-[#64CCF5] disabled:opacity-50"
+                        >
+                          {isUpdating ? "Saving..." : "Save Changes"}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingId(null);
+                            setEditingTitle("");
+                          }}
+                          className="rounded-lg border border-[#293B52] px-4 py-2 text-sm text-[#8296B2] transition hover:text-white"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <>
+
+                      {/* HABIT DETAILS */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#35B9EF]/10 text-xl text-[#35B9EF]">
+                            ◈
+                          </div>
+
+                          <div className="min-w-0">
+                            <h3 className="truncate font-semibold text-white">
+                              {habit.title}
+                            </h3>
+
+                            <p className="mt-1 text-xs text-[#8296B2]">
+                              {new Date(habit.date).toLocaleDateString(
+                                "en-IN",
+                                {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                }
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* STATUS */}
+                        <span
+                          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${
+                            habit.status === "completed"
+                              ? "bg-emerald-400/10 text-emerald-400"
+                              : "bg-amber-400/10 text-amber-400"
+                          }`}
+                        >
+                          {habit.status === "completed"
+                            ? "Completed"
+                            : "Pending"}
+                        </span>
                       </div>
 
-                      <div className="min-w-0">
-                        <h3 className="truncate font-semibold text-white">
-                          {habit.title}
-                        </h3>
-                        <p className="mt-1 text-xs text-[#8296B2]">
-                          {new Date(habit.date).toLocaleDateString(
-                            "en-IN",
-                            {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            }
-                          )}
-                        </p>
+                      {/* HABIT STATUS */}
+                      <div className="mt-5 border-t border-[#26364C] pt-4">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-[#8296B2]">
+                            Habit status
+                          </span>
+
+                          <span className="font-medium text-[#35B9EF]">
+                            {habit.status === "completed"
+                              ? "Done for today"
+                              : "Keep going"}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    <span
-                      className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${
-                        habit.status === "completed"
-                          ? "bg-emerald-400/10 text-emerald-400"
-                          : "bg-amber-400/10 text-amber-400"
-                      }`}
-                    >
-                      {habit.status === "completed"
-                        ? "Completed"
-                        : "Pending"}
-                    </span>
-                  </div>
+                      {/* EDIT AND DELETE BUTTONS */}
+                      <div className="mt-5 flex justify-end gap-3 border-t border-[#26364C] pt-4">
+                        <button
+                          onClick={() =>
+                            handleEdit(habit._id, habit.title)
+                          }
+                          className="rounded-lg border border-[#293B52] px-4 py-2 text-sm font-medium text-[#35B9EF] transition hover:bg-[#35B9EF]/10"
+                        >
+                          Edit
+                        </button>
 
-                  <div className="mt-5 border-t border-[#26364C] pt-4">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-[#8296B2]">
-                        Habit status
-                      </span>
-                      <span className="font-medium text-[#35B9EF]">
-                        {habit.status === "completed"
-                          ? "Done for today"
-                          : "Keep going"}
-                      </span>
-                    </div>
-                  </div>
+                        <button
+                          onClick={() => handleDelete(habit._id)}
+                          disabled={deletingHabitId === habit._id}
+                          className="rounded-lg border border-red-500/20 px-4 py-2 text-sm font-medium text-red-400 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {deletingHabitId === habit._id
+                            ? "Deleting..."
+                            : "Delete"}
+                        </button>
+                      </div>
+
+                    </>
+                  )}
+
                 </article>
               ))}
             </div>
@@ -260,6 +441,7 @@ export default function HabitsPage() {
   );
 }
 
+// STATISTICS CARD
 function StatCard({
   title,
   value,
@@ -274,8 +456,13 @@ function StatCard({
   return (
     <div className="rounded-2xl border border-[#26364C] bg-[#101C2D] p-5 transition hover:border-[#35B9EF]/40">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-[#8296B2]">{title}</p>
-        <span className={`text-2xl ${accent}`}>{icon}</span>
+        <p className="text-sm text-[#8296B2]">
+          {title}
+        </p>
+
+        <span className={`text-2xl ${accent}`}>
+          {icon}
+        </span>
       </div>
 
       <h3 className="mt-4 text-3xl font-bold text-white">
