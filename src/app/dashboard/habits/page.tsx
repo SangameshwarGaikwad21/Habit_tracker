@@ -2,11 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-import {
-  useAppDispatch,
-  useAppSelector,
-} from "@/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 
 import {
   createHabit,
@@ -31,17 +27,13 @@ export default function HabitsPage() {
 
   const [title, setTitle] = useState("");
   const [showForm, setShowForm] = useState(false);
-
-  // Edit states
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
 
-  // Fetch habits when page loads
   useEffect(() => {
     dispatch(fetchHabits());
   }, [dispatch]);
 
-  // Statistics
   const completed = habits.filter(
     (habit) => habit.status === "completed"
   ).length;
@@ -50,19 +42,13 @@ export default function HabitsPage() {
     (habit) => habit.status === "pending"
   ).length;
 
-  // CREATE HABIT
-  const handleSubmit = async (
-    e: React.FormEvent<HTMLFormElement>
-  ) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!title.trim()) return;
 
     try {
-      await dispatch(
-        createHabit({ title: title.trim() })
-      ).unwrap();
-
+      await dispatch(createHabit({ title: title.trim() })).unwrap();
       setTitle("");
       setShowForm(false);
     } catch (err) {
@@ -70,18 +56,13 @@ export default function HabitsPage() {
     }
   };
 
-  // OPEN EDIT FORM
   const handleEdit = (id: string, currentTitle: string) => {
     dispatch(clearHabitMessages());
-
     setEditingId(id);
     setEditingTitle(currentTitle);
   };
 
-  // UPDATE HABIT
-  const handleUpdate = async (
-    e: React.FormEvent<HTMLFormElement>
-  ) => {
+  const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!editingId || !editingTitle.trim()) return;
@@ -101,7 +82,6 @@ export default function HabitsPage() {
     }
   };
 
-  // DELETE HABIT
   const handleDelete = async (id: string) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this habit?"
@@ -116,18 +96,31 @@ export default function HabitsPage() {
     }
   };
 
+  const cardClass =
+    "rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-5";
+
+  const inputClass =
+    "w-full rounded-xl border border-[var(--border-color)] bg-[var(--input-bg)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-secondary)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/10";
+
+  const primaryButton =
+    "rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--accent-contrast)] transition hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-50";
+
   return (
-    <main className="min-h-screen bg-[#0B1220] p-5 text-white sm:p-8">
+    <main className="min-h-screen bg-[var(--page-bg)] p-5 text-[var(--text-primary)] sm:p-8">
       <div className="mx-auto max-w-7xl space-y-8">
 
         {/* HEADER */}
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
+            <p className="text-sm font-medium text-[var(--accent)]">
+              HABIT MANAGEMENT
+            </p>
+
+            <h1 className="mt-2 text-3xl font-bold tracking-tight">
               My Habits
             </h1>
 
-            <p className="mt-2 text-sm text-[#8296B2]">
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">
               Build consistency, one habit at a time.
             </p>
           </div>
@@ -138,52 +131,33 @@ export default function HabitsPage() {
               setShowForm(!showForm);
               setEditingId(null);
             }}
-            className="flex items-center justify-center gap-2 rounded-xl bg-[#35B9EF] px-5 py-3 text-sm font-semibold text-[#071421] transition hover:bg-[#64CCF5]"
+            className={primaryButton}
           >
-            <span className="text-xl">+</span>
-            Add New Habit
+            + Add New Habit
           </button>
         </div>
 
         {/* STATISTICS */}
         <section className="grid gap-5 sm:grid-cols-3">
-          <StatCard
-            title="Total Habits"
-            value={habits.length}
-            icon="◈"
-            accent="text-[#35B9EF]"
-          />
-
-          <StatCard
-            title="Completed"
-            value={completed}
-            icon="✓"
-            accent="text-emerald-400"
-          />
-
-          <StatCard
-            title="Pending"
-            value={pending}
-            icon="◷"
-            accent="text-amber-400"
-          />
+          <StatCard title="Total Habits" value={habits.length} icon="◈" />
+          <StatCard title="Completed" value={completed} icon="✓" />
+          <StatCard title="Pending" value={pending} icon="◷" />
         </section>
 
-        {/* ERROR MESSAGE */}
+        {/* MESSAGES */}
         {error && (
           <div
             role="alert"
-            className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400"
+            className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500"
           >
             {error}
           </div>
         )}
 
-        {/* SUCCESS MESSAGE */}
         {successMessage && (
           <div
             role="status"
-            className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-400"
+            className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-500"
           >
             ✓ {successMessage}
           </div>
@@ -191,21 +165,19 @@ export default function HabitsPage() {
 
         {/* ADD HABIT FORM */}
         {showForm && (
-          <section className="rounded-2xl border border-[#26364C] bg-[#101C2D] p-6">
-            <div className="mb-5">
-              <h2 className="text-lg font-semibold">
-                Create a New Habit
-              </h2>
+          <section className={`${cardClass} p-6`}>
+            <h2 className="text-lg font-semibold">
+              Create a New Habit
+            </h2>
 
-              <p className="mt-1 text-sm text-[#8296B2]">
-                What do you want to improve today?
-              </p>
-            </div>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">
+              What do you want to improve today?
+            </p>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="mt-5">
               <label
                 htmlFor="habit-title"
-                className="mb-2 block text-sm font-medium text-[#C2D0E0]"
+                className="mb-2 block text-sm font-medium"
               >
                 Habit title
               </label>
@@ -219,13 +191,13 @@ export default function HabitsPage() {
                   placeholder="e.g. Read books for 30 minutes"
                   maxLength={150}
                   required
-                  className="min-w-0 flex-1 rounded-xl border border-[#293B52] bg-[#0B1220] px-4 py-3 text-sm text-white outline-none transition placeholder:text-[#63758D] focus:border-[#35B9EF] focus:ring-2 focus:ring-[#35B9EF]/10"
+                  className={inputClass}
                 />
 
                 <button
                   type="submit"
                   disabled={isLoading || !title.trim()}
-                  className="rounded-xl bg-[#35B9EF] px-6 py-3 text-sm font-semibold text-[#071421] transition hover:bg-[#64CCF5] disabled:cursor-not-allowed disabled:opacity-50"
+                  className={primaryButton}
                 >
                   {isLoading ? "Creating..." : "Create Habit"}
                 </button>
@@ -238,7 +210,7 @@ export default function HabitsPage() {
                   setTitle("");
                   dispatch(clearHabitMessages());
                 }}
-                className="mt-4 text-sm text-[#8296B2] transition hover:text-white"
+                className="mt-4 text-sm text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
               >
                 Cancel
               </button>
@@ -246,38 +218,32 @@ export default function HabitsPage() {
           </section>
         )}
 
-        {/* HABIT LIST HEADER */}
+        {/* HABIT LIST */}
         <section>
           <div className="mb-5 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold">
-                All Habits
-              </h2>
-
-              <p className="mt-1 text-sm text-[#8296B2]">
+              <h2 className="text-xl font-semibold">All Habits</h2>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">
                 Track your daily activities.
               </p>
             </div>
 
-            <span className="rounded-lg border border-[#26364C] bg-[#101C2D] px-3 py-2 text-xs text-[#8296B2]">
+            <span className="rounded-lg border border-[var(--border-color)] bg-[var(--card-bg)] px-3 py-2 text-xs text-[var(--text-secondary)]">
               {habits.length} Total
             </span>
           </div>
 
-          {/* FETCH LOADING */}
           {isFetching ? (
-            <div className="rounded-2xl border border-[#26364C] bg-[#101C2D] py-16 text-center">
-              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#35B9EF]/30 border-t-[#35B9EF]" />
+            <div className={`${cardClass} py-16 text-center`}>
+              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)]/30 border-t-[var(--accent)]" />
 
-              <p className="mt-4 text-sm text-[#8296B2]">
+              <p className="mt-4 text-sm text-[var(--text-secondary)]">
                 Loading your habits...
               </p>
             </div>
           ) : habits.length === 0 ? (
-
-            /* EMPTY STATE */
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#293B52] bg-[#101C2D] px-5 py-16 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#35B9EF]/10 text-3xl text-[#35B9EF]">
+            <div className={`${cardClass} flex flex-col items-center justify-center border-dashed px-5 py-16 text-center`}>
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--accent)]/10 text-3xl text-[var(--accent)]">
                 +
               </div>
 
@@ -285,53 +251,43 @@ export default function HabitsPage() {
                 No habits created yet
               </h3>
 
-              <p className="mt-2 max-w-sm text-sm text-[#8296B2]">
-                Start building better habits today.
-                Create your first habit and track your progress.
+              <p className="mt-2 max-w-sm text-sm text-[var(--text-secondary)]">
+                Start building better habits today. Create your first habit and track your progress.
               </p>
 
               <button
                 onClick={() => setShowForm(true)}
-                className="mt-6 rounded-xl bg-[#35B9EF] px-5 py-3 text-sm font-semibold text-[#071421] transition hover:bg-[#64CCF5]"
+                className={`${primaryButton} mt-6`}
               >
                 Create Your First Habit
               </button>
             </div>
-
           ) : (
-
-            /* HABITS GRID */
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {habits.map((habit) => (
                 <article
                   key={habit._id}
-                  className="group rounded-2xl border border-[#26364C] bg-[#101C2D] p-5 transition hover:border-[#35B9EF]/50 hover:bg-[#122237]"
+                  className={`${cardClass} transition hover:border-[var(--accent)]/50`}
                 >
-
-                  {/* EDIT FORM */}
                   {editingId === habit._id ? (
                     <form onSubmit={handleUpdate}>
-                      <h3 className="mb-4 font-semibold">
-                        Edit Habit
-                      </h3>
+                      <h3 className="mb-4 font-semibold">Edit Habit</h3>
 
                       <input
                         type="text"
                         value={editingTitle}
-                        onChange={(e) =>
-                          setEditingTitle(e.target.value)
-                        }
+                        onChange={(e) => setEditingTitle(e.target.value)}
                         maxLength={150}
                         required
                         autoFocus
-                        className="w-full rounded-xl border border-[#35B9EF] bg-[#0B1220] px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-[#35B9EF]/10"
+                        className={inputClass}
                       />
 
                       <div className="mt-4 flex gap-2">
                         <button
                           type="submit"
                           disabled={isUpdating || !editingTitle.trim()}
-                          className="flex-1 rounded-lg bg-[#35B9EF] px-3 py-2 text-sm font-semibold text-[#071421] transition hover:bg-[#64CCF5] disabled:opacity-50"
+                          className={`${primaryButton} flex-1`}
                         >
                           {isUpdating ? "Saving..." : "Save Changes"}
                         </button>
@@ -342,7 +298,7 @@ export default function HabitsPage() {
                             setEditingId(null);
                             setEditingTitle("");
                           }}
-                          className="rounded-lg border border-[#293B52] px-4 py-2 text-sm text-[#8296B2] transition hover:text-white"
+                          className="rounded-lg border border-[var(--border-color)] px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                         >
                           Cancel
                         </button>
@@ -350,20 +306,18 @@ export default function HabitsPage() {
                     </form>
                   ) : (
                     <>
-
-                      {/* HABIT DETAILS */}
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex min-w-0 items-center gap-3">
-                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#35B9EF]/10 text-xl text-[#35B9EF]">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--accent)]/10 text-xl text-[var(--accent)]">
                             ◈
                           </div>
 
                           <div className="min-w-0">
-                            <h3 className="truncate font-semibold text-white">
+                            <h3 className="truncate font-semibold">
                               {habit.title}
                             </h3>
 
-                            <p className="mt-1 text-xs text-[#8296B2]">
+                            <p className="mt-1 text-xs text-[var(--text-secondary)]">
                               {new Date(habit.date).toLocaleDateString(
                                 "en-IN",
                                 {
@@ -376,12 +330,11 @@ export default function HabitsPage() {
                           </div>
                         </div>
 
-                        {/* STATUS */}
                         <span
                           className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${
                             habit.status === "completed"
-                              ? "bg-emerald-400/10 text-emerald-400"
-                              : "bg-amber-400/10 text-amber-400"
+                              ? "bg-emerald-500/10 text-emerald-500"
+                              : "bg-amber-500/10 text-amber-500"
                           }`}
                         >
                           {habit.status === "completed"
@@ -390,14 +343,13 @@ export default function HabitsPage() {
                         </span>
                       </div>
 
-                      {/* HABIT STATUS */}
-                      <div className="mt-5 border-t border-[#26364C] pt-4">
+                      <div className="mt-5 border-t border-[var(--border-color)] pt-4">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-[#8296B2]">
+                          <span className="text-[var(--text-secondary)]">
                             Habit status
                           </span>
 
-                          <span className="font-medium text-[#35B9EF]">
+                          <span className="font-medium text-[var(--accent)]">
                             {habit.status === "completed"
                               ? "Done for today"
                               : "Keep going"}
@@ -405,13 +357,12 @@ export default function HabitsPage() {
                         </div>
                       </div>
 
-                      {/* EDIT AND DELETE BUTTONS */}
-                      <div className="mt-5 flex justify-end gap-3 border-t border-[#26364C] pt-4">
+                      <div className="mt-5 flex justify-end gap-3 border-t border-[var(--border-color)] pt-4">
                         <button
                           onClick={() =>
                             handleEdit(habit._id, habit.title)
                           }
-                          className="rounded-lg border border-[#293B52] px-4 py-2 text-sm font-medium text-[#35B9EF] transition hover:bg-[#35B9EF]/10"
+                          className="rounded-lg border border-[var(--border-color)] px-4 py-2 text-sm font-medium text-[var(--accent)] transition hover:bg-[var(--accent)]/10"
                         >
                           Edit
                         </button>
@@ -419,53 +370,42 @@ export default function HabitsPage() {
                         <button
                           onClick={() => handleDelete(habit._id)}
                           disabled={deletingHabitId === habit._id}
-                          className="rounded-lg border border-red-500/20 px-4 py-2 text-sm font-medium text-red-400 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="rounded-lg border border-red-500/20 px-4 py-2 text-sm font-medium text-red-500 transition hover:bg-red-500/10 disabled:opacity-50"
                         >
                           {deletingHabitId === habit._id
                             ? "Deleting..."
                             : "Delete"}
                         </button>
                       </div>
-
                     </>
                   )}
-
                 </article>
               ))}
             </div>
           )}
         </section>
-
       </div>
     </main>
   );
 }
 
-// STATISTICS CARD
 function StatCard({
   title,
   value,
   icon,
-  accent,
 }: {
   title: string;
   value: number;
   icon: string;
-  accent: string;
 }) {
   return (
-    <div className="rounded-2xl border border-[#26364C] bg-[#101C2D] p-5 transition hover:border-[#35B9EF]/40">
+    <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-5 transition hover:border-[var(--accent)]/40">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-[#8296B2]">
-          {title}
-        </p>
-
-        <span className={`text-2xl ${accent}`}>
-          {icon}
-        </span>
+        <p className="text-sm text-[var(--text-secondary)]">{title}</p>
+        <span className="text-2xl text-[var(--accent)]">{icon}</span>
       </div>
 
-      <h3 className="mt-4 text-3xl font-bold text-white">
+      <h3 className="mt-4 text-3xl font-bold text-[var(--text-primary)]">
         {value}
       </h3>
     </div>

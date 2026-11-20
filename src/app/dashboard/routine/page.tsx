@@ -34,15 +34,24 @@ export default function RoutinePage() {
   const [formError, setFormError] = useState("");
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Load routine from Local Storage on page load
+  // Restore routine from Local Storage
   useEffect(() => {
     try {
       const savedRoutine = localStorage.getItem("routine");
 
       if (savedRoutine) {
-        const parsedRoutine = JSON.parse(savedRoutine);
+        const parsedRoutine: unknown = JSON.parse(savedRoutine);
 
-        if (Array.isArray(parsedRoutine)) {
+        if (
+          Array.isArray(parsedRoutine) &&
+          parsedRoutine.every(
+            (item) =>
+              item &&
+              typeof item.title === "string" &&
+              typeof item.startTime === "string" &&
+              typeof item.endTime === "string"
+          )
+        ) {
           dispatch(setRoutine(parsedRoutine));
         }
       }
@@ -53,24 +62,33 @@ export default function RoutinePage() {
     }
   }, [dispatch]);
 
-  // Automatically update Local Storage whenever routine changes
+  // Persist every Redux routine change
   useEffect(() => {
     if (!isHydrated) return;
 
     try {
       localStorage.setItem("routine", JSON.stringify(routine));
     } catch (error) {
-      console.error("Failed to save routine to Local Storage:", error);
+      console.error("Failed to save routine:", error);
     }
   }, [routine, isHydrated]);
+
+  const cardClass =
+    "rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-6";
+
+  const inputClass =
+    "w-full rounded-xl border border-[var(--border-color)] bg-[var(--input-bg)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-secondary)] focus:border-[var(--accent)]";
+
+  const primaryButton =
+    "w-full rounded-xl bg-[var(--accent)] py-3 font-semibold text-[var(--accent-contrast)] transition hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-50";
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setActivity({
-      ...activity,
+    setActivity((previous) => ({
+      ...previous,
       [e.target.name]: e.target.value,
-    });
+    }));
   };
 
   const resetForm = () => {
@@ -94,7 +112,7 @@ export default function RoutinePage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (
@@ -148,25 +166,30 @@ export default function RoutinePage() {
     }
   };
 
-  // Save routine to MongoDB
+  // Save complete routine to MongoDB
   const handleSaveRoutine = async () => {
-    if (routine.length === 0) {
-      setFormError("Please add at least one routine activity.");
-      return;
-    }
+  setFormError("");
+  dispatch(clearRoutineMessages());
 
-    const result = await dispatch(addRoutine({ routine }));
+  if (routine.length === 0) {
+    setFormError("Please add at least one routine activity.");
+    return;
+  }
 
-    if (addRoutine.fulfilled.match(result)) {
-      dispatch(clearRoutineMessages());
-    }
-  };
+  try {
+    await dispatch(addRoutine({ routine })).unwrap();
 
-  // Prevent showing empty state before Local Storage is loaded
+    // Do not clear messages here.
+    // Redux will display the success message.
+  } catch (error) {
+    console.error("Failed to save routine:", error);
+  }
+};
+
   if (!isHydrated) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#0B1220] text-white">
-        <p className="text-sm text-slate-400">
+      <main className="flex min-h-screen items-center justify-center bg-[var(--page-bg)] text-[var(--text-primary)]">
+        <p className="text-sm text-[var(--text-secondary)]">
           Loading your routine...
         </p>
       </main>
@@ -174,13 +197,13 @@ export default function RoutinePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0B1220] p-4 text-white sm:p-6 lg:p-8">
+    <main className="min-h-screen bg-[var(--page-bg)] p-4 text-[var(--text-primary)] sm:p-6 lg:p-8">
       <div className="mx-auto max-w-6xl space-y-8">
 
-        {/* Header */}
+        {/* HEADER */}
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <p className="text-sm font-medium text-cyan-400">
+            <p className="text-sm font-medium text-[var(--accent)]">
               DAILY PLANNER
             </p>
 
@@ -188,23 +211,31 @@ export default function RoutinePage() {
               My Routine
             </h1>
 
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">
               Create and manage your daily activities.
             </p>
           </div>
 
-          <button
+         <button
+            type="button"
             onClick={handleSaveRoutine}
             disabled={isLoading || routine.length === 0}
-            className="rounded-xl bg-cyan-500 px-5 py-3 font-semibold text-[#07111F] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex w-auto items-center justify-center rounded-xl bg-[var(--accent)] px-6 py-3 font-semibold text-[var(--accent-contrast)] transition hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isLoading ? "Saving..." : "Save Routine"}
+            {isLoading ? (
+              <>
+                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                Saving...
+              </>
+            ) : (
+              "Save Routine"
+            )}
           </button>
         </div>
 
-        {/* Total Activities */}
-        <div className="rounded-2xl border border-slate-700 bg-[#101C2D] p-5">
-          <p className="text-sm text-slate-400">
+        {/* TOTAL ACTIVITIES */}
+        <div className={cardClass}>
+          <p className="text-sm text-[var(--text-secondary)]">
             Total Routine Activities
           </p>
 
@@ -213,13 +244,13 @@ export default function RoutinePage() {
           </h2>
         </div>
 
-        {/* Messages */}
+        {/* MESSAGES */}
         {(formError || error || successMessage) && (
           <div
             className={`rounded-xl border p-4 text-sm ${
               formError || error
-                ? "border-red-500/30 bg-red-500/10 text-red-400"
-                : "border-green-500/30 bg-green-500/10 text-green-400"
+                ? "border-red-500/30 bg-red-500/10 text-red-500"
+                : "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
             }`}
           >
             {formError || error || successMessage}
@@ -228,20 +259,20 @@ export default function RoutinePage() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[350px_1fr]">
 
-          {/* Add Routine Form */}
-          <section className="h-fit rounded-2xl border border-slate-700 bg-[#101C2D] p-6">
+          {/* ADD ROUTINE FORM */}
+          <section className={`${cardClass} h-fit`}>
             <h2 className="text-xl font-semibold">
               {editingIndex !== null ? "Edit Activity" : "Add Routine"}
             </h2>
 
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">
               Add an activity and choose its duration.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-5">
 
               <div>
-                <label className="mb-2 block text-sm text-slate-300">
+                <label className="mb-2 block text-sm font-medium">
                   Activity Name
                 </label>
 
@@ -251,12 +282,12 @@ export default function RoutinePage() {
                   value={activity.title}
                   onChange={handleChange}
                   placeholder="e.g. Study DSA, Gym, Reading..."
-                  className="w-full rounded-xl border border-slate-700 bg-[#0B1220] px-4 py-3 text-sm outline-none focus:border-cyan-400"
+                  className={inputClass}
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm text-slate-300">
+                <label className="mb-2 block text-sm font-medium">
                   Start Time
                 </label>
 
@@ -265,12 +296,12 @@ export default function RoutinePage() {
                   name="startTime"
                   value={activity.startTime}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-slate-700 bg-[#0B1220] px-4 py-3 text-sm text-white outline-none focus:border-cyan-400"
+                  className={inputClass}
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm text-slate-300">
+                <label className="mb-2 block text-sm font-medium">
                   End Time
                 </label>
 
@@ -279,14 +310,11 @@ export default function RoutinePage() {
                   name="endTime"
                   value={activity.endTime}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-slate-700 bg-[#0B1220] px-4 py-3 text-sm text-white outline-none focus:border-cyan-400"
+                  className={inputClass}
                 />
               </div>
 
-              <button
-                type="submit"
-                className="w-full rounded-xl bg-cyan-500 py-3 font-semibold text-[#07111F] transition hover:bg-cyan-400"
-              >
+              <button type="submit" className={primaryButton}>
                 {editingIndex !== null
                   ? "Update Activity"
                   : "+ Add Activity"}
@@ -296,7 +324,7 @@ export default function RoutinePage() {
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="w-full rounded-xl border border-slate-700 py-3 text-sm text-slate-300 hover:bg-slate-800"
+                  className="w-full rounded-xl border border-[var(--border-color)] py-3 text-sm text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
                 >
                   Cancel
                 </button>
@@ -304,21 +332,20 @@ export default function RoutinePage() {
             </form>
           </section>
 
-          {/* Routine List */}
-          <section className="rounded-2xl border border-slate-700 bg-[#101C2D] p-6">
-
+          {/* ROUTINE LIST */}
+          <section className={cardClass}>
             <div className="mb-6 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold">
                   My Daily Activities
                 </h2>
 
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">
                   Your personal daily schedule.
                 </p>
               </div>
 
-              <span className="rounded-lg bg-cyan-400/10 px-3 py-2 text-xs text-cyan-400">
+              <span className="rounded-lg bg-[var(--accent)]/10 px-3 py-2 text-xs text-[var(--accent)]">
                 {routine.length} Activities
               </span>
             </div>
@@ -331,7 +358,7 @@ export default function RoutinePage() {
                   No Routine Added
                 </h3>
 
-                <p className="mt-2 text-sm text-slate-400">
+                <p className="mt-2 text-sm text-[var(--text-secondary)]">
                   Start by adding your first daily activity.
                 </p>
               </div>
@@ -340,10 +367,10 @@ export default function RoutinePage() {
                 {routine.map((item, index) => (
                   <div
                     key={index}
-                    className="flex flex-col justify-between gap-4 rounded-xl border border-slate-700 bg-[#0B1220] p-4 sm:flex-row sm:items-center"
+                    className="flex flex-col justify-between gap-4 rounded-xl border border-[var(--border-color)] bg-[var(--input-bg)] p-4 sm:flex-row sm:items-center"
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-cyan-400/10 text-lg">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--accent)]/10 text-lg text-[var(--accent)]">
                         🕒
                       </span>
 
@@ -352,7 +379,7 @@ export default function RoutinePage() {
                           {item.title}
                         </p>
 
-                        <p className="mt-1 text-xs text-slate-400">
+                        <p className="mt-1 text-xs text-[var(--text-secondary)]">
                           {formatTime(item.startTime)} – {formatTime(item.endTime)}
                         </p>
                       </div>
@@ -361,14 +388,14 @@ export default function RoutinePage() {
                     <div className="flex shrink-0 gap-2">
                       <button
                         onClick={() => handleEdit(index)}
-                        className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-cyan-400 hover:bg-cyan-400/10"
+                        className="rounded-lg border border-[var(--border-color)] px-3 py-2 text-xs text-[var(--accent)] transition hover:bg-[var(--accent)]/10"
                       >
                         Edit
                       </button>
 
                       <button
                         onClick={() => handleDelete(index)}
-                        className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-red-400 hover:bg-red-400/10"
+                        className="rounded-lg border border-red-500/20 px-3 py-2 text-xs text-red-500 transition hover:bg-red-500/10"
                       >
                         Delete
                       </button>
