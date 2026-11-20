@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 
 import {
@@ -10,6 +10,7 @@ import {
   updateRoutineActivity,
   removeRoutineActivity,
   clearRoutineMessages,
+  setRoutine,
 } from "@/redux/fetures/routine.slice";
 
 import type { RoutineActivity } from "@/types/routine";
@@ -31,6 +32,37 @@ export default function RoutinePage() {
 
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [formError, setFormError] = useState("");
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Load routine from Local Storage on page load
+  useEffect(() => {
+    try {
+      const savedRoutine = localStorage.getItem("routine");
+
+      if (savedRoutine) {
+        const parsedRoutine = JSON.parse(savedRoutine);
+
+        if (Array.isArray(parsedRoutine)) {
+          dispatch(setRoutine(parsedRoutine));
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load routine:", error);
+    } finally {
+      setIsHydrated(true);
+    }
+  }, [dispatch]);
+
+  // Automatically update Local Storage whenever routine changes
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    try {
+      localStorage.setItem("routine", JSON.stringify(routine));
+    } catch (error) {
+      console.error("Failed to save routine to Local Storage:", error);
+    }
+  }, [routine, isHydrated]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -116,6 +148,7 @@ export default function RoutinePage() {
     }
   };
 
+  // Save routine to MongoDB
   const handleSaveRoutine = async () => {
     if (routine.length === 0) {
       setFormError("Please add at least one routine activity.");
@@ -128,6 +161,17 @@ export default function RoutinePage() {
       dispatch(clearRoutineMessages());
     }
   };
+
+  // Prevent showing empty state before Local Storage is loaded
+  if (!isHydrated) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#0B1220] text-white">
+        <p className="text-sm text-slate-400">
+          Loading your routine...
+        </p>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#0B1220] p-4 text-white sm:p-6 lg:p-8">
@@ -196,7 +240,6 @@ export default function RoutinePage() {
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-5">
 
-              {/* Activity Name */}
               <div>
                 <label className="mb-2 block text-sm text-slate-300">
                   Activity Name
@@ -212,7 +255,6 @@ export default function RoutinePage() {
                 />
               </div>
 
-              {/* Start Time */}
               <div>
                 <label className="mb-2 block text-sm text-slate-300">
                   Start Time
@@ -227,7 +269,6 @@ export default function RoutinePage() {
                 />
               </div>
 
-              {/* End Time */}
               <div>
                 <label className="mb-2 block text-sm text-slate-300">
                   End Time
