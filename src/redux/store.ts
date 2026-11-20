@@ -1,11 +1,14 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./fetures/auth.Slice";
 import habitReducer from "./fetures/habit.slice";
+import routineReducer from "./fetures/routine.slice";
+
 
 export const store = configureStore({
   reducer: {
-    auth: authReducer,
-     habit: habitReducer,
+      auth: authReducer,
+      habit: habitReducer,
+      routine:routineReducer
   },
 });
 
